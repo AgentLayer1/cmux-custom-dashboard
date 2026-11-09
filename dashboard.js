@@ -1,5 +1,5 @@
 /*
- * cmux Dashboard · v0.1.0 (1)
+ * cmux Dashboard · v0.1.0 (2)
  * Every coding agent in cmux, sorted by what needs you.
  *
  *   NEEDS YOU   waiting on input, or a finished turn you haven't looked at
@@ -117,7 +117,7 @@ const unfilteredCards = computed(() => {
     .filter((card) => card.section !== null);
 });
 
-// cmux 0.65.1's right-sidebar host passes no groups, so there the chip row disappears.
+// cmux's right-sidebar host passes no groups (still true in 0.65.2), so there the chip row disappears.
 const groupChips = computed(() => {
   const withAgents = new Set(unfilteredCards().map((card) => card.groupId));
   return (data.groups() ?? []).filter((group) => withAgents.has(group.id));

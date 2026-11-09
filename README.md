@@ -24,7 +24,7 @@ A [custom sidebar](https://cmux.com/docs/custom-sidebars) for cmux that lists ev
 | **Idle**      | it has been idle for more than an hour                                   |
 | **Ended**     | it ended within the last 24 hours (collapsed by default)                 |
 
-Each card shows the session title, how long it has been in its current state, its workspace, branch and folder, and the last prompt you sent it. Running subagents are listed under their session. A search box filters by title, prompt, workspace, group, folder and branch, and group chips filter by workspace group.
+Each card shows the session title, how long it has been in its current state, its workspace, branch and folder, and the last prompt you sent it. Running subagents are listed under their session. A search box filters by title, prompt, workspace, group, folder and branch, and group chips filter by workspace group. The chips appear in the left sidebar and as a pane tab, but not in the right-hand panel, because cmux doesn't pass workspace groups to it.
 
 All state is cmux's own (`workspaces[].agents[]`, their `children[]`, and `tabs[]`). The sidebar only draws it: no files, no network, no background process.
 
@@ -63,7 +63,7 @@ cmux sidebar validate dashboard
 
 ## Updating
 
-The copy in this repo is the source of truth; the one in `~/.config/cmux/sidebars/` is an installed copy. The first line of the file's header carries its version and build, `v0.1.0 (1)`:
+The copy in this repo is the source of truth; the one in `~/.config/cmux/sidebars/` is an installed copy. The first line of the file's header carries its version and build, such as `v0.1.0 (2)`:
 
 - **Build** goes up by one every time a change is copied over.
 - **Version** follows [semver](https://semver.org) for changes someone using the dashboard would notice.
