@@ -6,7 +6,7 @@
 
 [![Platform](https://img.shields.io/badge/platform-macOS-22D3EE?style=flat-square&logo=apple&logoColor=white)](#quick-start) [![cmux](https://img.shields.io/badge/cmux-0.65.2%2B-8B5CF6?style=flat-square)](https://cmux.com) [![License](https://img.shields.io/badge/license-MIT-10B981?style=flat-square)](./LICENSE) [![AgentLayer](https://img.shields.io/badge/by-AgentLayer-0B0B0F?style=flat-square)](https://agentlayer.one)
 
-One file. No setup, no network, no background process.
+One file. No setup, no network, no background process. Part of [AgentLayer's workstation guide](https://agentlayer.one/docs/workstation/cmux#agent-dashboard).
 
 </div>
 
