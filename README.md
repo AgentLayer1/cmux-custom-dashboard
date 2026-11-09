@@ -40,10 +40,10 @@ All state is cmux's own (`workspaces[].agents[]`, their `children[]`, and `tabs[
 
 ## Install
 
-Copy the sidebar into cmux's sidebar folder:
+The sidebar is one file, [`dist/dashboard.js`](./dist/dashboard.js). Copy it into cmux's sidebar folder:
 
 ```sh
-mkdir -p ~/.config/cmux/sidebars && cp dashboard.js ~/.config/cmux/sidebars/dashboard.js
+mkdir -p ~/.config/cmux/sidebars && cp dist/dashboard.js ~/.config/cmux/sidebars/dashboard.js
 ```
 
 Then open it in one of two places:
@@ -53,25 +53,70 @@ cmux right-sidebar set custom dashboard   # a narrow, resizable panel on the rig
 cmux sidebar open dashboard               # a regular pane tab
 ```
 
-cmux reloads the sidebar whenever the file changes. To check it before opening:
-
-```sh
-cmux sidebar validate dashboard
-```
+cmux reloads the sidebar whenever the file changes.
 
 ---
 
-## Updating
+## Development
 
-The copy in this repo is the source of truth; the one in `~/.config/cmux/sidebars/` is an installed copy. The first line of the file's header carries its version and build, such as `v0.1.0 (2)`:
+Needs [Bun](https://bun.sh) and cmux installed. Run `bun install` once, then:
 
-- **Build** goes up by one every time a change is copied over.
+| Command | Does |
+|---|---|
+| `bun run install:cmux` | Runs `check`, validates the build with cmux under a staging name, and only then swaps it in and reloads it. A failure leaves the installed dashboard untouched. |
+| `bun run check` | Typecheck, build, tests. |
+| `bun run build` | Compiles [`src/dashboard.ts`](./src/dashboard.ts) to `dist/dashboard.js`. |
+| `bun run test` | Tests only. |
+| `bun run typecheck` | Checks everything against [`src/runtime.d.ts`](./src/runtime.d.ts) and Bun's types. |
+| `bun run preview` | Builds `dashboard-preview`, the dashboard drawing made-up sessions (below). |
+
+### Source and build
+
+[`src/dashboard.ts`](./src/dashboard.ts) is the source of truth. The build only erases types: `erasableSyntaxOnly` rejects any TypeScript that would need code generated, and the target matches the source, so `dist/dashboard.js` is the source minus its types, comments kept. It is committed so people can copy it, and a test fails when it's older than the source.
+
+The build sees only [`src/runtime.d.ts`](./src/runtime.d.ts), not Bun's or Node's types, so the dashboard can't reach for an API cmux's runtime doesn't have.
+
+### Versions
+
+The installed copy in `~/.config/cmux/sidebars/` carries the version and build from the source header, such as `v0.1.0 (3)`:
+
+- **Build** goes up by one every time a change is installed.
 - **Version** follows [semver](https://semver.org) for changes someone using the dashboard would notice.
 
-After bumping the header, copy the file again with the install command above. To see which build is installed:
+To see which build is installed:
 
 ```sh
-sed -n 2p ~/.config/cmux/sidebars/dashboard.js
+grep -m1 "cmux Dashboard · v" ~/.config/cmux/sidebars/dashboard.js
+```
+
+### Tests
+
+[`src/dashboard.test.ts`](./src/dashboard.test.ts) runs the built `dist/dashboard.js`, the file people install, on cmux's own sidebar runtime, rebuilds the scene from the operations the runtime sends to the app, and taps it the way cmux does. The runtime is GPL-licensed, so it isn't copied into this repo: the tests load `SidebarRuntime.js` from the installed app, at `/Applications/cmux.app/Contents/Resources/CmuxSwiftRenderUI_CmuxSwiftRenderUI.bundle/Contents/Resources/`. Set `CMUX_SIDEBAR_RUNTIME` to test against a different copy.
+
+### Preview with mock data
+
+[`preview/fixture.ts`](./preview/fixture.ts) holds invented workspaces and sessions covering every section, with a frozen clock. `bun run preview` wraps the real dashboard so it draws the fixture instead of your sessions, and writes it to `~/.config/cmux/sidebars/dashboard-preview.js` (pass a path to write it elsewhere). Taps do nothing in the preview.
+
+```sh
+bun run preview && cmux right-sidebar set custom dashboard-preview
+cmux shot --out assets/screenshot-full.png        # then crop the panel into assets/screenshot.png
+rm ~/.config/cmux/sidebars/dashboard-preview.js && cmux right-sidebar set custom dashboard
+```
+
+### Keeping `runtime.d.ts` current
+
+cmux publishes no types for custom sidebars, so [`src/runtime.d.ts`](./src/runtime.d.ts) is written by hand. Its header names the cmux version it matches and the three cmux sources it follows:
+
+| Part | Source in [cmux](https://github.com/manaflow-ai/cmux) |
+|---|---|
+| Runtime API: `signal`, `computed`, `sidebar`, `cmux`, views and modifiers | `Packages/macOS/CmuxSwiftRenderUI/Sources/CmuxSwiftRenderUI/Resources/SidebarRuntime.js` (also shipped inside the app) |
+| Data shape: `workspaces`, `agents`, `children`, `tabs`, `groups`, `clock` | `Packages/macOS/CmuxSidebar/Sources/CmuxSidebar/Layout/CustomSidebarDataContextBuilder.swift` |
+| What each field means and when it's present | `docs/custom-sidebars.md` |
+
+After a cmux release, diff those paths between the release tags in a cmux checkout, mirror any change in `runtime.d.ts`, update the version in its header, and run `bun run check`. The typecheck then points at any dashboard or fixture code the change breaks.
+
+```sh
+git -C <cmux checkout> fetch --tags && git -C <cmux checkout> diff v0.65.2.2 v<new> -- Packages/macOS/CmuxSwiftRenderUI/Sources/CmuxSwiftRenderUI/Resources/SidebarRuntime.js Packages/macOS/CmuxSidebar/Sources/CmuxSidebar/Layout/CustomSidebarDataContextBuilder.swift docs/custom-sidebars.md
 ```
 
 ---
@@ -80,7 +125,7 @@ sed -n 2p ~/.config/cmux/sidebars/dashboard.js
 
 These come from the data cmux hands custom sidebars, not from the dashboard.
 
-- **A session can stay in Running after it finished.** When Claude Code's Stop hook doesn't fire (an Esc interrupt, a hook that timed out), cmux settles the turn from the terminal's own idle report. That fallback updates cmux's built-in sidebar but not `agents[].status`, so the card keeps showing the session as working.
+- **A session can stay in Running after it finished.** When Claude Code's Stop hook doesn't fire (an Esc interrupt, a hook that timed out), cmux settles the turn from the terminal's own idle report. That fallback updates cmux's built-in sidebar but not `agents[].status`, so the card keeps showing the session as working. Tracked in [cmux#39157](https://github.com/manaflow-ai/cmux/issues/39157).
 - **The jump uses the tab's id, not the agent's.** `agents[].surfaceId` holds an id that `surface.focus` rejects, so the dashboard focuses through the hosting tab's `tabs[k].surfaceId`, the id the cmux docs give for `surface.*` commands.
 
 ---

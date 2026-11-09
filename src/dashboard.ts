@@ -1,5 +1,5 @@
 /*
- * cmux Dashboard · v0.1.0 (2)
+ * cmux Dashboard · v0.1.0 (3)
  * Every coding agent in cmux, sorted by what needs you.
  *
  *   NEEDS YOU   waiting on input, or a finished turn you haven't looked at
@@ -8,7 +8,8 @@
  *   IDLE        idle for over an hour
  *   ENDED       ended in the last 24 hours (collapsed)
  *
- * Install   cp dashboard.js ~/.config/cmux/sidebars/dashboard.js
+ * Install   bun run install:cmux                       from a clone: checks, validates, installs
+ *           cp dist/dashboard.js ~/.config/cmux/sidebars/dashboard.js
  * Open      cmux right-sidebar set custom dashboard    side panel, resizable
  *           cmux sidebar open dashboard                pane tab
  * Check     cmux sidebar validate dashboard
@@ -17,13 +18,6 @@
  *
  * https://github.com/AgentLayer1/cmux-custom-dashboard · MIT © 2026 AgentLayer
  */
-
-const [query, setQuery] = signal("");
-const [groupFilter, setGroupFilter] = signal("");
-const [collapsed, setCollapsed] = signal(["ended"]);
-
-const toggleSection = (section) =>
-  setCollapsed(collapsed().includes(section) ? collapsed().filter((name) => name !== section) : [...collapsed(), section]);
 
 const RECENT_SECS = 60 * 60;
 const ENDED_SECS = 24 * 60 * 60;
@@ -37,14 +31,71 @@ const SECTIONS = {
   idle: { label: "IDLE", color: "#8E8E93" },
   ended: { label: "ENDED", color: "#8E8E9366" },
 };
-const ORDER = Object.keys(SECTIONS);
+type Section = keyof typeof SECTIONS;
+// Object.keys widens the keys to string.
+const ORDER = Object.keys(SECTIONS) as Section[];
+
+interface Card {
+  key: string;
+  section: Section;
+  agent: Agent;
+  subagents: AgentChild[];
+  workspaceId: string;
+  workspaceTitle: string;
+  workspaceColor: string;
+  focusId: string;
+  groupId: string;
+  group: string;
+  folder: string;
+  branch: string;
+  title: string;
+  summary: string;
+  searchText: string;
+}
+
+interface HeaderEntry {
+  key: string;
+  kind: "header";
+  section: Section;
+  count: number;
+}
+
+interface CardEntry extends Card {
+  kind: "card";
+}
+
+interface ChildEntry {
+  key: string;
+  kind: "child";
+  child: AgentChild;
+  workspaceId: string;
+  focusId: string;
+}
+
+type Entry = HeaderEntry | CardEntry | ChildEntry;
+
+interface Badge {
+  key: string;
+  text: string;
+  icon: string;
+  fg: string;
+  bg: string;
+  flexible: boolean;
+}
+
+const [query, setQuery] = signal("");
+const [groupFilter, setGroupFilter] = signal("");
+const [collapsed, setCollapsed] = signal<Section[]>(["ended"]);
+
+const toggleSection = (section: Section) =>
+  setCollapsed(collapsed().includes(section) ? collapsed().filter((name) => name !== section) : [...collapsed(), section]);
 
 const epoch = () => data.clock()?.epoch ?? 0;
 // The sections only move at the 1h and 24h marks, so the card pipeline follows a minute clock: a
 // number, which the runtime's signals skip when unchanged, instead of the per-second clock object.
 const minute = computed(() => Math.floor(epoch() / 60));
 
-const fmtSpan = (secs) => {
+const fmtSpan = (secs: number) => {
   const total = Math.max(0, Math.floor(secs));
   if (total < 60) {
     return `${total}s`;
@@ -57,15 +108,15 @@ const fmtSpan = (secs) => {
   return hours < 24 ? `${hours}h ${String(minutes % 60).padStart(2, "0")}m` : `${Math.floor(hours / 24)}d`;
 };
 
-const lastSegment = (path) => String(path ?? "").split("/").filter(Boolean).at(-1) ?? "";
+const lastSegment = (path: string) => path.split("/").filter(Boolean).at(-1) ?? "";
 
 // cmux records anything delivered into the prompt as the latest prompt, including subagent
 // hand-backs and command wrappers (`<agent-message …>`, `<command-name>`); those aren't summaries.
-const isProse = (text) => Boolean(text) && !text.trimStart().startsWith("<");
+const isProse = (text: string | undefined): text is string => Boolean(text) && !text?.trimStart().startsWith("<");
 
 // cmux reports a finished turn as `idle` even while background subagents run (they show only as
 // running children), and a finished turn you haven't looked at only as the tab's unread flag.
-const sectionOf = (agent, subagents, unread, now) => {
+const sectionOf = (agent: Agent, subagents: AgentChild[], unread: boolean, now: number): Section | null => {
   if (agent.status === "needs_input") {
     return "needs";
   }
@@ -81,21 +132,26 @@ const sectionOf = (agent, subagents, unread, now) => {
   return now - (agent.lastActivityAt ?? 0) <= RECENT_SECS ? "recent" : "idle";
 };
 
-const unfilteredCards = computed(() => {
+const unfilteredCards = computed((): Card[] => {
   const now = minute() * 60;
   const groupNames = new Map((data.groups() ?? []).map((group) => [group.id, group.name]));
-  return (data.workspaces() ?? [])
-    .flatMap((workspace) =>
-      (workspace.agents ?? []).map((agent) => {
-        const tab = (workspace.tabs ?? []).find((item) => item.id === agent.panelId);
-        const title = tab?.title || agent.title || agent.name;
-        const subagents = (agent.children ?? []).filter((child) => child.running);
-        // No per-agent "last said" text exists in cmux's data; the tab's last prompt is the
-        // closest per-session summary, then the session's first prompt.
-        const prompts = [tab?.latestPrompt, agent.title].filter(isProse);
-        return {
+  return (data.workspaces() ?? []).flatMap((workspace) =>
+    (workspace.agents ?? []).flatMap((agent) => {
+      const tab = (workspace.tabs ?? []).find((item) => item.id === agent.panelId);
+      const subagents = (agent.children ?? []).filter((child) => child.running);
+      const section = sectionOf(agent, subagents, Boolean(tab?.hasUnread), now);
+      if (section === null) {
+        return [];
+      }
+      const title = tab?.title || agent.title || agent.name;
+      // No per-agent "last said" text exists in cmux's data; the tab's last prompt is the
+      // closest per-session summary, then the session's first prompt.
+      const prompts = [tab?.latestPrompt, agent.title].filter(isProse);
+      const groupId = workspace.group ?? "";
+      return [
+        {
           key: `${workspace.id}:${agent.id}`,
-          section: sectionOf(agent, subagents, Boolean(tab?.hasUnread), now),
+          section,
           agent,
           subagents,
           workspaceId: workspace.id,
@@ -104,17 +160,17 @@ const unfilteredCards = computed(() => {
           // cmux 0.65.2 fills agent.surfaceId with the bonsplit tab id, which surface.focus
           // rejects; the hosting tab's surfaceId is the id the surface.* verbs accept.
           focusId: tab?.surfaceId ?? "",
-          groupId: workspace.group ?? "",
-          group: groupNames.get(workspace.group) ?? "",
+          groupId,
+          group: groupNames.get(groupId) ?? "",
           folder: lastSegment(agent.directory ?? tab?.directory ?? workspace.directory),
           branch: tab?.branch ?? workspace.branch ?? "",
           title,
           summary: prompts.find((text) => text !== title) ?? "",
           searchText: prompts.join(" "),
-        };
-      }),
-    )
-    .filter((card) => card.section !== null);
+        },
+      ];
+    }),
+  );
 });
 
 // cmux's right-sidebar host passes no groups (still true in 0.65.2), so there the chip row disappears.
@@ -138,42 +194,46 @@ const cards = computed(() => {
     });
 });
 
-const needsInputThenNewest = (first, second) =>
+const needsInputThenNewest = (first: Card, second: Card) =>
   Number(second.agent.status === "needs_input") - Number(first.agent.status === "needs_input") ||
   (second.agent.lastActivityAt ?? 0) - (first.agent.lastActivityAt ?? 0);
 
-const bySection = computed(() =>
-  Object.fromEntries(
-    ORDER.map((section) => [
-      section,
-      cards()
-        .filter((card) => card.section === section)
-        .toSorted(needsInputThenNewest),
-    ]),
-  ),
+const bySection = computed(
+  () =>
+    // Object.fromEntries widens the keys to string.
+    Object.fromEntries(
+      ORDER.map((section) => [
+        section,
+        cards()
+          .filter((card) => card.section === section)
+          .toSorted(needsInputThenNewest),
+      ]),
+    ) as Record<Section, Card[]>,
 );
 
-const entries = computed(() =>
-  ORDER.flatMap((section) => {
+const entries = computed((): Entry[] =>
+  ORDER.flatMap((section): Entry[] => {
     const list = bySection()[section];
     if (list.length === 0) {
       return [];
     }
-    const header = { key: `h:${section}`, kind: "header", section, count: list.length };
+    const header: HeaderEntry = { key: `h:${section}`, kind: "header", section, count: list.length };
     if (collapsed().includes(section)) {
       return [header];
     }
     return [
       header,
-      ...list.flatMap((card) => [
+      ...list.flatMap((card): Entry[] => [
         { ...card, kind: "card" },
-        ...card.subagents.map((child) => ({
-          key: `c:${card.key}:${child.id}`,
-          kind: "child",
-          child,
-          workspaceId: card.workspaceId,
-          focusId: card.focusId,
-        })),
+        ...card.subagents.map(
+          (child): ChildEntry => ({
+            key: `c:${card.key}:${child.id}`,
+            kind: "child",
+            child,
+            workspaceId: card.workspaceId,
+            focusId: card.focusId,
+          }),
+        ),
       ]),
     ];
   }),
@@ -181,15 +241,15 @@ const entries = computed(() =>
 
 // surface.focus selects the workspace as well; a tab with no focus target yet (a remote tmux
 // pane still connecting) can only take the workspace.
-const jump = (workspaceId, focusId) =>
+const jump = (workspaceId: string, focusId: string) =>
   focusId
     ? cmux("surface.focus", { surface_id: focusId, workspace_id: workspaceId })
     : cmux("workspace.select", { workspace_id: workspaceId });
 
-const dotColor = (card) =>
+const dotColor = (card: Card) =>
   card.section === "needs" && card.agent.status !== "needs_input" ? YOUR_MOVE : SECTIONS[card.section].color;
 
-const timeText = (agent) => {
+const timeText = (agent: Agent) => {
   const live = agent.status === "working" || agent.status === "needs_input";
   const start = (live && agent.sinceEpoch) || agent.lastActivityAt;
   return start ? fmtSpan(epoch() - start) : "";
@@ -199,7 +259,7 @@ const timeText = (agent) => {
 // A ForEach renders as a group whose own default layoutPriority wraps every row, overriding any
 // priority set on a badge, so width is settled by `fixedSize` instead: fixed badges never truncate,
 // flexible ones share what is left.
-const badgesOf = (card) =>
+const badgesOf = (card: Card): Badge[] =>
   [
     card.subagents.length > 0 && {
       key: "subagents",
@@ -233,9 +293,9 @@ const badgesOf = (card) =>
       bg: "#7f7f7f1f",
       flexible: true,
     },
-  ].filter(Boolean);
+  ].filter((item) => typeof item === "object");
 
-const badge = (item) =>
+const badge = (item: () => Badge) =>
   HStack({ spacing: 3 }, [
     Image(() => item().icon)
       .font(8)
@@ -253,7 +313,7 @@ const badge = (item) =>
     .cornerRadius(5)
     .fixedSize(() => (item().flexible ? null : "horizontal"));
 
-const chip = (label, active, onTap) =>
+const chip = (label: Binding<string>, active: () => boolean, onTap: () => void) =>
   Text(label)
     .font(11)
     .weight("semibold")
@@ -267,7 +327,7 @@ const chip = (label, active, onTap) =>
     .fixedSize("horizontal")
     .onTap(onTap);
 
-const headerRow = (entry) => {
+const headerRow = (entry: () => HeaderEntry) => {
   const meta = () => SECTIONS[entry().section];
   return HStack({ spacing: 6 }, [
     Text(() => meta().label)
@@ -292,7 +352,7 @@ const headerRow = (entry) => {
     .onTap(() => toggleSection(entry().section));
 };
 
-const cardRow = (card) =>
+const cardRow = (card: () => CardEntry) =>
   VStack({ spacing: 4 }, [
     HStack({ spacing: 7 }, [
       Circle({ size: 7 }).fill(() => dotColor(card())),
@@ -330,7 +390,7 @@ const cardRow = (card) =>
     .frame({ maxWidth: "infinity" })
     .onTap(() => jump(card().workspaceId, card().focusId));
 
-const childRow = (entry) => {
+const childRow = (entry: () => ChildEntry) => {
   const child = () => entry().child;
   return HStack({ spacing: 6 }, [
     Text("└").font(10).monospaced().color("tertiary"),
@@ -356,9 +416,20 @@ const childRow = (entry) => {
     .onTap(() => jump(entry().workspaceId, entry().focusId));
 };
 
-const ROWS = { header: headerRow, card: cardRow, child: childRow };
+// ForEach builds a row once per key, and every key starts with its kind, so a row's entry never
+// changes kind and the narrowed accessor stays true.
+const row = (entry: () => Entry) => {
+  switch (entry().kind) {
+    case "header":
+      return headerRow(entry as () => HeaderEntry);
+    case "card":
+      return cardRow(entry as () => CardEntry);
+    case "child":
+      return childRow(entry as () => ChildEntry);
+  }
+};
 
-const tally = (section) =>
+const tally = (section: Section) =>
   HStack({ spacing: 4 }, [
     Circle({ size: 7 }).fill(SECTIONS[section].color),
     Text(() => String(bySection()[section].length))
@@ -411,9 +482,7 @@ sidebar(() =>
 
     Divider(),
 
-    VStack({ spacing: 4 }, [
-      ForEach({ items: entries, key: (entry) => entry.key }, (entry) => ROWS[entry().kind](entry)),
-    ]),
+    VStack({ spacing: 4 }, [ForEach({ items: entries, key: (entry) => entry.key }, row)]),
 
     Text(() => (entries().length === 0 ? (query().trim() || effectiveGroupFilter() ? "No matches." : "No agents running in cmux.") : ""))
       .font(11)
