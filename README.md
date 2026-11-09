@@ -195,8 +195,6 @@ git -C <cmux checkout> fetch --tags && git -C <cmux checkout> diff v0.65.2.2 v<n
 
 </details>
 
----
-
 <details>
 <summary><b>Known limits</b></summary>
 
