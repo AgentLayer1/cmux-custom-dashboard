@@ -24,7 +24,7 @@ A [custom sidebar](https://cmux.com/docs/custom-sidebars) for cmux that lists ev
 | **Idle**      | it has been idle for more than an hour                                   |
 | **Ended**     | it ended within the last 24 hours (collapsed by default)                 |
 
-Each card shows the session title, how long it has been in its current state, its workspace, branch and folder, and the last prompt you sent it. Running subagents are listed under their session. A search box filters by title, prompt, workspace, group, folder and branch, and group chips filter by workspace group. The chips appear in the left sidebar and as a pane tab, but not in the right-hand panel, because cmux doesn't pass workspace groups to it.
+Each card shows the session title, how long it has been in its current state, its workspace, branch and folder, and the last prompt you sent it. Running subagents are listed under their session. A search box filters by title, prompt, workspace, group, folder and branch, and group chips filter by workspace group. On cmux 0.65.2 the chips show in the left sidebar and as a pane tab, but not in the right-hand panel (see [Known limits](#known-limits)).
 
 All state is cmux's own (`workspaces[].agents[]`, their `children[]`, and `tabs[]`). The sidebar only draws it: no files, no network, no background process.
 
@@ -40,10 +40,10 @@ All state is cmux's own (`workspaces[].agents[]`, their `children[]`, and `tabs[
 
 ## Install
 
-The sidebar is one file, [`dist/dashboard.js`](./dist/dashboard.js). Copy it into cmux's sidebar folder:
+The whole dashboard is one file, [`dist/dashboard.js`](./dist/dashboard.js). There's nothing to clone or build: download it into cmux's sidebar folder.
 
 ```sh
-mkdir -p ~/.config/cmux/sidebars && cp dist/dashboard.js ~/.config/cmux/sidebars/dashboard.js
+mkdir -p ~/.config/cmux/sidebars && curl -fsSL https://raw.githubusercontent.com/AgentLayer1/cmux-custom-dashboard/main/dist/dashboard.js -o ~/.config/cmux/sidebars/dashboard.js
 ```
 
 Then open it in one of two places:
@@ -53,7 +53,42 @@ cmux right-sidebar set custom dashboard   # a narrow, resizable panel on the rig
 cmux sidebar open dashboard               # a regular pane tab
 ```
 
-cmux reloads the sidebar whenever the file changes.
+cmux reloads the sidebar whenever the file changes, so running the same `curl` again updates it in place.
+
+Working from a clone instead? `bun run install:cmux` checks, builds and installs it (see [Development](#development)).
+
+---
+
+## Bonus: a toolbar button
+
+Open the dashboard with one click from the tab bar. Add an action and a button to `~/.config/cmux/cmux.json` (back the file up first):
+
+```jsonc
+{
+  "actions": {
+    "dashboard": {
+      "type": "command",
+      "title": "Dashboard",
+      "icon": { "type": "symbol", "name": "square.grid.2x2" },
+      // The command runs in a new terminal tab; `exit` closes that tab once the panel is open.
+      "command": "cmux right-sidebar set custom dashboard && exit",
+      "target": "newTabInCurrentPane"
+    }
+  },
+  "ui": {
+    "surfaceTabBar": {
+      // List every button you want shown, with "dashboard" wherever you want it.
+      "buttons": ["cmux.newTerminal", "cmux.splitRight", "cmux.splitDown", "dashboard"]
+    }
+  }
+}
+```
+
+Then apply it without restarting:
+
+```sh
+cmux reload-config
+```
 
 ---
 
@@ -123,10 +158,14 @@ git -C <cmux checkout> fetch --tags && git -C <cmux checkout> diff v0.65.2.2 v<n
 
 ## Known limits
 
-These come from the data cmux hands custom sidebars, not from the dashboard.
+These come from the data cmux hands custom sidebars, not from the dashboard. Checked against cmux 0.65.2.
 
-- **A session can stay in Running after it finished.** When Claude Code's Stop hook doesn't fire (an Esc interrupt, a hook that timed out), cmux settles the turn from the terminal's own idle report. That fallback updates cmux's built-in sidebar but not `agents[].status`, so the card keeps showing the session as working. Tracked in [cmux#39157](https://github.com/manaflow-ai/cmux/issues/39157).
-- **The jump uses the tab's id, not the agent's.** `agents[].surfaceId` holds an id that `surface.focus` rejects, so the dashboard focuses through the hosting tab's `tabs[k].surfaceId`, the id the cmux docs give for `surface.*` commands.
+| Limit | cmux issue | Status |
+|---|---|---|
+| **A session can stay in Running after it finished.** When Claude Code's Stop hook doesn't fire (an Esc interrupt, a hook that timed out), cmux settles the turn from the terminal's own idle report. That updates cmux's built-in sidebar but not `agents[].status`, so the card keeps showing the session as working. | [#39157](https://github.com/manaflow-ai/cmux/issues/39157) | Open |
+| **`agents[].surfaceId` can't focus a tab.** It holds an id `surface.focus` rejects, so the dashboard focuses through the hosting tab's `tabs[k].surfaceId` instead, the id cmux's docs give for `surface.*` commands. Clicking a card works today. | [#39154](https://github.com/manaflow-ai/cmux/issues/39154) | Open |
+| **No group chips in the right-hand panel.** cmux 0.65.2 passes no workspace groups to custom sidebars there, so the chip row stays hidden. They show in the left sidebar and as a pane tab. | [#20281](https://github.com/manaflow-ai/cmux/issues/20281) | Fixed on cmux `main`, not yet released |
+| **Background subagents drop off when the turn ends.** cmux 0.65.2 marks a session's subagents ended when its turn ends, even while they keep running in the background. | [#20283](https://github.com/manaflow-ai/cmux/issues/20283) | Fixed on cmux `main`, not yet released |
 
 ---
 
