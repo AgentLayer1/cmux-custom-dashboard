@@ -8,6 +8,8 @@
 [![License](https://img.shields.io/badge/license-MIT-10B981?style=flat-square)](./LICENSE)
 [![AgentLayer](https://img.shields.io/badge/by-AgentLayer-0B0B0F?style=flat-square)](https://agentlayer.one)
 
+<img src="./assets/screenshot.png" alt="The dashboard in cmux's right sidebar: sessions grouped into Needs you, Running, Recent and Idle, with subagents listed under their session" width="286" />
+
 </div>
 
 ---
