@@ -106,21 +106,6 @@ cmux reload-config
 
 ---
 
-## Known limits
-
-These come from the data cmux gives custom sidebars, not from the dashboard. Checked against cmux 0.65.2.
-
-| | Limit | cmux issue |
-|:---:|---|---|
-| 🟡 | **A finished session can stay in Running.** When Claude Code's Stop hook doesn't fire (an Esc interrupt, a timed-out hook), cmux's built-in sidebar settles the session but `agents[].status` keeps saying it's working. | [#39157](https://github.com/manaflow-ai/cmux/issues/39157) |
-| 🟡 | **`agents[].surfaceId` can't focus a tab.** The dashboard focuses through the hosting tab's `tabs[k].surfaceId` instead, so clicking a card works today. | [#39154](https://github.com/manaflow-ai/cmux/issues/39154) |
-| ✅ | **No group chips in the right-hand panel.** cmux 0.65.2 doesn't pass workspace groups there; they show in the left sidebar and as a tab. | [#20281](https://github.com/manaflow-ai/cmux/issues/20281) |
-| ✅ | **Background subagents drop off when the turn ends**, even while they keep running. | [#20283](https://github.com/manaflow-ai/cmux/issues/20283) |
-
-🟡 open in cmux &nbsp;·&nbsp; ✅ fixed on cmux `main`, waiting for a release
-
----
-
 ## Development
 
 Written in TypeScript and tested on cmux's own sidebar runtime. You need [Bun](https://bun.sh) and cmux; run `bun install` once.
@@ -207,6 +192,26 @@ After a cmux release, diff those paths between the release tags in a cmux checko
 ```sh
 git -C <cmux checkout> fetch --tags && git -C <cmux checkout> diff v0.65.2.2 v<new> -- Packages/macOS/CmuxSwiftRenderUI/Sources/CmuxSwiftRenderUI/Resources/SidebarRuntime.js Packages/macOS/CmuxSidebar/Sources/CmuxSidebar/Layout/CustomSidebarDataContextBuilder.swift docs/custom-sidebars.md
 ```
+
+</details>
+
+---
+
+<details>
+<summary><b>Known limits</b></summary>
+
+<br>
+
+These come from the data cmux gives custom sidebars, not from the dashboard. Checked against cmux 0.65.2.
+
+| | Limit | cmux issue |
+|:---:|---|---|
+| 🟡 | **A finished session can stay in Running.** When Claude Code's Stop hook doesn't fire (an Esc interrupt, a timed-out hook), cmux's built-in sidebar settles the session but `agents[].status` keeps saying it's working. | [#39157](https://github.com/manaflow-ai/cmux/issues/39157) |
+| 🟡 | **`agents[].surfaceId` can't focus a tab.** The dashboard focuses through the hosting tab's `tabs[k].surfaceId` instead, so clicking a card works today. | [#39154](https://github.com/manaflow-ai/cmux/issues/39154) |
+| ✅ | **No group chips in the right-hand panel.** cmux 0.65.2 doesn't pass workspace groups there; they show in the left sidebar and as a tab. | [#20281](https://github.com/manaflow-ai/cmux/issues/20281) |
+| ✅ | **Background subagents drop off when the turn ends**, even while they keep running. | [#20283](https://github.com/manaflow-ai/cmux/issues/20283) |
+
+🟡 open in cmux &nbsp;·&nbsp; ✅ fixed on cmux `main`, waiting for a release
 
 </details>
 
