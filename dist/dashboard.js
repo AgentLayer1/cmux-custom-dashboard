@@ -1,6 +1,6 @@
 "use strict";
 /*
- * cmux Dashboard · v0.1.0 (3)
+ * cmux Dashboard · v0.1.1 (4)
  * Every coding agent in cmux, sorted by what needs you.
  *
  *   NEEDS YOU   waiting on input, or a finished turn you haven't looked at
@@ -55,7 +55,7 @@ const fmtSpan = (secs) => {
 const lastSegment = (path) => path.split("/").filter(Boolean).at(-1) ?? "";
 // cmux records anything delivered into the prompt as the latest prompt, including subagent
 // hand-backs and command wrappers (`<agent-message …>`, `<command-name>`); those aren't summaries.
-const isProse = (text) => Boolean(text) && !text?.trimStart().startsWith("<");
+const isProse = (text) => !!text && !text.trimStart().startsWith("<");
 // cmux reports a finished turn as `idle` even while background subagents run (they show only as
 // running children), and a finished turn you haven't looked at only as the tab's unread flag.
 const sectionOf = (agent, subagents, unread, now) => {
@@ -299,7 +299,7 @@ const cardRow = (card) => VStack({ spacing: 4 }, [
 const childRow = (entry) => {
     const child = () => entry().child;
     return HStack({ spacing: 6 }, [
-        Text("└").font(10).monospaced().color("tertiary"),
+        Text("└").font(10).monospaced().color("tertiary").fixedSize(),
         Circle({ size: 5 }).fill(SECTIONS.running.color),
         Text(() => child().label || "subagent")
             .font(11)

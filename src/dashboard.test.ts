@@ -111,11 +111,11 @@ const outline = (texts: string[]) =>
 
 test("dist/dashboard.js is built from the current source", () => {
   const out = mkdtempSync(join(tmpdir(), "dashboard-build-"));
-  const { exitCode, stderr } = Bun.spawnSync(
+  const { exitCode, stdout } = Bun.spawnSync(
     [join(ROOT, "node_modules", ".bin", "tsc"), "-p", join(ROOT, "tsconfig.build.json"), "--outDir", out],
     { cwd: ROOT },
   );
-  expect(stderr.toString()).toBe("");
+  expect(stdout.toString()).toBe("");
   expect(exitCode).toBe(0);
   expect(readFileSync(join(out, "dashboard.js"), "utf8"), "dist is stale: run `bun run build`").toBe(DASHBOARD);
 });

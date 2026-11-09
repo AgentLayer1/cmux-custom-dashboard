@@ -63,28 +63,26 @@ Working from a clone instead? `bun run install:cmux` checks, builds and installs
 
 Open the dashboard with one click from the tab bar. Add an action and a button to `~/.config/cmux/cmux.json` (back the file up first):
 
-```jsonc
+```json
 {
   "actions": {
     "dashboard": {
       "type": "command",
       "title": "Dashboard",
       "icon": { "type": "symbol", "name": "square.grid.2x2" },
-      // The command runs in a new terminal tab; `exit` closes that tab once the panel is open.
       "command": "cmux right-sidebar set custom dashboard && exit",
       "target": "newTabInCurrentPane"
     }
   },
   "ui": {
     "surfaceTabBar": {
-      // List every button you want shown, with "dashboard" wherever you want it.
       "buttons": ["cmux.newTerminal", "cmux.splitRight", "cmux.splitDown", "dashboard"]
     }
   }
 }
 ```
 
-Then apply it without restarting:
+The command runs in a new terminal tab, and `exit` closes that tab once the panel is open. `buttons` lists every button the tab bar shows, so keep the ones you already have and put `"dashboard"` where you want it. Then apply it without restarting:
 
 ```sh
 cmux reload-config
