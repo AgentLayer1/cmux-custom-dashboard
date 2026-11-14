@@ -108,11 +108,13 @@ cmux reload-config
 
 ## Use it in your own sidebar
 
-Building a custom sidebar of your own? Depend on this repo, pinned to a tag, and bundle it into your sidebar with Bun:
+Building a custom sidebar of your own? Add this repo from GitHub and bundle it into your sidebar with Bun:
 
 ```sh
-bun add github:AgentLayer1/cmux-custom-dashboard#v0.2.0
+bun add github:AgentLayer1/cmux-custom-dashboard
 ```
+
+That installs `main`, and `bun.lock` records the exact commit. To move to the latest `main` later, run `bun update cmux-custom-dashboard`.
 
 Take whichever level you need:
 
