@@ -106,15 +106,35 @@ cmux reload-config
 
 ---
 
+## Use it in your own sidebar
+
+Building a custom sidebar of your own? Depend on this repo, pinned to a tag, and bundle it into your sidebar with Bun:
+
+```sh
+bun add github:AgentLayer1/cmux-custom-dashboard#v0.2.0
+```
+
+Take whichever level you need:
+
+| Import | Gives you |
+|---|---|
+| `cmux-custom-dashboard/model` | `agentCards` (every session as a card, placed in its section), `bySection`, `jump` to focus a session, and cmux's types |
+| `cmux-custom-dashboard/components` | `cardRow`, `subagentRow`, `sectionHeader`, `tally`, `chip`, `searchField` |
+| `cmux-custom-dashboard/dashboard` | `dashboard()`, the whole panel, with its own search and filters each time it's mounted |
+
+[`examples/host.ts`](./examples/host.ts) puts all three to work: a two-page sidebar whose Today page draws a "Needs you" strip from the model and the card component, and whose Agents page is the whole dashboard.
+
+---
+
 ## Development
 
 Written in TypeScript and tested on cmux's own sidebar runtime. You need [Bun](https://bun.sh) and cmux; run `bun install` once.
 
 | Command | Does |
 |---|---|
-| `bun run install:cmux` | Checks, then installs into cmux, but only after cmux validates it. A failure leaves your installed dashboard alone. |
+| `bun run install:cmux` | Checks, then installs into cmux, but only after cmux validates it. A failure leaves your installed dashboard alone. Run it from a cmux terminal, where the `cmux` command is on your PATH. |
 | `bun run check` | Typecheck, build and tests. |
-| `bun run build` | Compiles [`src/dashboard.ts`](./src/dashboard.ts) to [`dist/dashboard.js`](./dist/dashboard.js). |
+| `bun run build` | Bundles [`src/main.ts`](./src/main.ts) into [`dist/dashboard.js`](./dist/dashboard.js). |
 | `bun run test` | Tests only. |
 | `bun run typecheck` | Typecheck only. |
 | `bun run preview` | Builds `dashboard-preview`, the dashboard drawing made-up sessions. |
@@ -124,9 +144,11 @@ Written in TypeScript and tested on cmux's own sidebar runtime. You need [Bun](h
 
 <br>
 
-[`src/dashboard.ts`](./src/dashboard.ts) is the source of truth. The build only erases types: `erasableSyntaxOnly` rejects any TypeScript that would need code generated, and the target matches the source, so `dist/dashboard.js` is the source minus its types, comments kept. It's committed so people can download it, and a test fails when it falls behind the source.
+`src/` is the source of truth, in three layers a sidebar can import: [`model.ts`](./src/model.ts) (the agent data), [`components.ts`](./src/components.ts) (the rows and controls) and [`dashboard.ts`](./src/dashboard.ts) (the whole panel). [`main.ts`](./src/main.ts) carries the header and mounts the panel.
 
-The build sees only [`src/runtime.d.ts`](./src/runtime.d.ts), not Bun's or Node's types, so the dashboard can't reach for an API cmux's runtime doesn't have.
+cmux loads one script, so [`scripts/build.ts`](./scripts/build.ts) bundles `main.ts` with Bun into `dist/dashboard.js`, headed by `main.ts`'s comment. The bundle is readable but drops the other comments; they stay in `src/`. It's committed so people can download it, and a test fails when it falls behind the source.
+
+Before bundling, the build typechecks against only [`src/runtime.d.ts`](./src/runtime.d.ts), not Bun's or Node's types, so the dashboard can't reach for an API cmux's runtime doesn't have.
 
 </details>
 
