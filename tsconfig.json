@@ -13,5 +13,5 @@
     "noUncheckedIndexedAccess": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "preview", "scripts"]
+  "include": ["src", "preview", "scripts", "examples"]
 }
