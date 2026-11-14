@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
-import { mkdtempSync, readFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createContext, runInContext } from "node:vm";
 import { fixture } from "../preview/fixture.ts";
+import { bundle } from "../scripts/build.ts";
 
 // cmux's runtime is GPL-licensed, so it is loaded from the installed app rather than vendored.
 const RUNTIME =
@@ -12,6 +12,7 @@ const RUNTIME =
   "/Applications/cmux.app/Contents/Resources/CmuxSwiftRenderUI_CmuxSwiftRenderUI.bundle/Contents/Resources/SidebarRuntime.js";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const DASHBOARD = readFileSync(join(ROOT, "dist", "dashboard.js"), "utf8");
+const HOST = await bundle("examples/host.ts");
 
 type Op =
   | { op: "create"; id: string; type: string }
@@ -33,7 +34,7 @@ interface Action {
   params?: Record<string, string>;
 }
 
-const mount = (data: typeof fixture) => {
+const mount = (data: typeof fixture, script = DASHBOARD) => {
   const nodes = new Map<string, SceneNode>();
   const actions: Action[] = [];
   let root = "";
@@ -73,7 +74,7 @@ const mount = (data: typeof fixture) => {
   runInContext(readFileSync(RUNTIME, "utf8"), context);
   const setData = (key: string, value: unknown) => context.__setData(key, JSON.stringify(value));
   Object.entries(data).forEach(([key, value]) => setData(key, value));
-  runInContext(DASHBOARD, context);
+  runInContext(script, context);
 
   const walk = (id: string): string[] => [id, ...(nodes.get(id)?.children ?? []).flatMap(walk)];
   const visibleTexts = () =>
@@ -108,36 +109,30 @@ const subagents = fixture.workspaces.flatMap((workspace) =>
 );
 const outline = (texts: string[]) =>
   texts.filter((text) => HEADERS.includes(text) || titles.includes(text) || subagents.includes(text));
+const FULL_OUTLINE = [
+  "NEEDS YOU",
+  "Partial refunds design",
+  "Dark mode audit",
+  "RUNNING",
+  "Push notification retries",
+  "rate-limit-middleware",
+  "Review the limiter for race conditions",
+  "Write load-test scenarios",
+  "Check Redis key expiry",
+  "RECENT",
+  "Search indexing",
+  "IDLE",
+  "Frost date lookup",
+  "ENDED",
+];
 
-test("dist/dashboard.js is built from the current source", () => {
-  const out = mkdtempSync(join(tmpdir(), "dashboard-build-"));
-  const { exitCode, stdout } = Bun.spawnSync(
-    [join(ROOT, "node_modules", ".bin", "tsc"), "-p", join(ROOT, "tsconfig.build.json"), "--outDir", out],
-    { cwd: ROOT },
-  );
-  expect(stdout.toString()).toBe("");
-  expect(exitCode).toBe(0);
-  expect(readFileSync(join(out, "dashboard.js"), "utf8"), "dist is stale: run `bun run build`").toBe(DASHBOARD);
+test("dist/dashboard.js is built from the current source", async () => {
+  expect(await bundle("src/main.ts"), "dist is stale: run `bun run build`").toBe(DASHBOARD);
 });
 
 test("sorts sessions by what needs you, with subagents under their session and Ended collapsed", () => {
   const { visibleTexts } = mount(fixture);
-  expect(outline(visibleTexts())).toEqual([
-    "NEEDS YOU",
-    "Partial refunds design",
-    "Dark mode audit",
-    "RUNNING",
-    "Push notification retries",
-    "rate-limit-middleware",
-    "Review the limiter for race conditions",
-    "Write load-test scenarios",
-    "Check Redis key expiry",
-    "RECENT",
-    "Search indexing",
-    "IDLE",
-    "Frost date lookup",
-    "ENDED",
-  ]);
+  expect(outline(visibleTexts())).toEqual(FULL_OUTLINE);
 });
 
 test("tapping a session focuses its own tab, not just its workspace", () => {
@@ -164,4 +159,22 @@ test("search narrows the list to matching sessions", () => {
   const { visibleTexts, type } = mount(fixture);
   type("garden");
   expect(outline(visibleTexts())).toEqual(["IDLE", "Frost date lookup", "ENDED"]);
+});
+
+test("a host sidebar draws its own Needs-you strip from the model, with cards that focus their tab", () => {
+  const { visibleTexts, tap } = mount(fixture, HOST);
+  expect(outline(visibleTexts())).toEqual(["Partial refunds design", "Dark mode audit"]);
+  expect(tap("Dark mode audit")?.method).toBe("surface.focus");
+});
+
+test("a host sidebar mounts the whole dashboard as a page, and again after leaving it", () => {
+  const { visibleTexts, tap, type } = mount(fixture, HOST);
+  tap("Agents");
+  expect(outline(visibleTexts())).toEqual(FULL_OUTLINE);
+  type("garden");
+  expect(outline(visibleTexts())).toEqual(["IDLE", "Frost date lookup", "ENDED"]);
+  tap("Today");
+  expect(outline(visibleTexts())).toEqual(["Partial refunds design", "Dark mode audit"]);
+  tap("Agents");
+  expect(outline(visibleTexts()), "a remounted dashboard starts with an empty search").toEqual(FULL_OUTLINE);
 });

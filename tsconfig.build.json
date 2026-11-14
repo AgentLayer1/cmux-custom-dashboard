@@ -1,13 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": [],
-    "noEmit": false,
-    "allowImportingTsExtensions": false,
-    "removeComments": false,
-    "rootDir": "src",
-    "outDir": "dist"
+    "types": []
   },
   "include": [],
-  "files": ["src/dashboard.ts", "src/runtime.d.ts"]
+  "files": ["src/main.ts", "examples/host.ts"]
 }

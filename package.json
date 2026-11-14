@@ -2,8 +2,13 @@
   "name": "cmux-custom-dashboard",
   "private": true,
   "type": "module",
+  "exports": {
+    "./model": "./src/model.ts",
+    "./components": "./src/components.ts",
+    "./dashboard": "./src/dashboard.ts"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && bun scripts/build.ts",
     "check": "bun run typecheck && bun run build && bun test",
     "install:cmux": "bun scripts/install.ts",
     "preview": "bun run build && bun preview/build.ts",
