@@ -142,6 +142,7 @@ Written in TypeScript and tested on cmux's own sidebar runtime. You need [Bun](h
 | `bun run test` | Tests only. |
 | `bun run typecheck` | Typecheck only. |
 | `bun run preview` | Builds `manager-preview`, the manager drawing made-up sessions. |
+| `bun run screenshot` | Retakes `assets/screenshot.png`: the preview in a window of its own, cropped to the panel. |
 
 <details>
 <summary><b>How the build works</b></summary>
@@ -190,13 +191,15 @@ cmux's runtime is GPL-licensed, so it isn't copied into this repo. The tests loa
 
 <br>
 
-[`preview/fixture.ts`](./preview/fixture.ts) holds invented workspaces and sessions covering every section, with a frozen clock. `bun run preview` wraps the real manager so it draws the fixture instead of your sessions, and writes it to `~/.config/cmux/sidebars/manager-preview.js` (pass a path to write it elsewhere). Taps do nothing in the preview. It's how the screenshot above is made:
+[`preview/fixture.ts`](./preview/fixture.ts) holds invented workspaces and sessions covering every section, with a frozen clock. `bun run preview` wraps the real manager so it draws the fixture instead of your sessions, and writes it to `~/.config/cmux/sidebars/manager-preview.js` (pass a path to write it elsewhere). Taps do nothing in the preview.
+
+`bun run screenshot` makes the screenshot above from it, from a terminal inside cmux (its CLI answers nowhere else):
 
 ```sh
-bun run preview && cmux right-sidebar set custom manager-preview
-cmux shot --out assets/screenshot-full.png        # then crop the panel into assets/screenshot.png
-rm ~/.config/cmux/sidebars/manager-preview.js && cmux right-sidebar set custom manager
+bun run screenshot
 ```
+
+It opens a window of its own, shows the preview in that window's right sidebar, captures that window, crops it to the panel and writes `assets/screenshot.png`, then closes the window. Every command after the first names that window, so your own windows, workspaces and sidebars are never touched.
 
 </details>
 
