@@ -201,10 +201,10 @@ export const subagentRow = (row: () => Subagent) => {
 };
 
 export const tally = (section: Section, count: () => number) =>
-  HStack({ spacing: 4 }, [
-    Circle({ size: 7 }).fill(SECTIONS[section].color),
+  HStack({ spacing: 3 }, [
+    Circle({ size: 5 }).fill(SECTIONS[section].color),
     Text(() => String(count()))
-      .font(11)
+      .font(10)
       .weight("semibold")
       .monospaced()
       .color(() => (count() ? "secondary" : "quaternary")),

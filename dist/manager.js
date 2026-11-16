@@ -180,9 +180,9 @@ var subagentRow = (row) => {
     Text(() => fmtSpan(epoch() - (child().startedEpoch ?? epoch()))).font(10).monospaced().color("tertiary").fixedSize()
   ]).paddingLeading(26).paddingTrailing(10).paddingVertical(2).cornerRadius(6).hoverBackground("#7f7f7f1c").frame({ maxWidth: "infinity" }).onTap(() => jump(row().workspaceId, row().focusId));
 };
-var tally = (section, count) => HStack({ spacing: 4 }, [
-  Circle({ size: 7 }).fill(SECTIONS[section].color),
-  Text(() => String(count())).font(11).weight("semibold").monospaced().color(() => count() ? "secondary" : "quaternary")
+var tally = (section, count) => HStack({ spacing: 3 }, [
+  Circle({ size: 5 }).fill(SECTIONS[section].color),
+  Text(() => String(count())).font(10).weight("semibold").monospaced().color(() => count() ? "secondary" : "quaternary")
 ]).fixedSize();
 
 // src/manager.ts
@@ -241,13 +241,13 @@ var manager = ({ header, trailing } = {}) => {
     }
   };
   return VStack({ spacing: 8 }, [
-    HStack({ spacing: 12 }, [
+    HStack({ spacing: 8 }, [
       header ?? HStack({ spacing: 6 }, [
         Image("square.grid.2x2").font(12).color("accent"),
         Text("Manager").font(13).weight("semibold")
       ]).fixedSize(),
       Spacer({ minLength: 0 }),
-      ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length)),
+      HStack({ spacing: 7 }, ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length))).fixedSize(),
       ...trailing ? [trailing] : []
     ]),
     ForEach({ items: () => groupChips().length ? ["chips"] : [], key: (item) => item }, () => HStack({ spacing: 4 }, [

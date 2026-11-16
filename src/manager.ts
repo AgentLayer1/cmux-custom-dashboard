@@ -114,14 +114,17 @@ export const manager = ({ header, trailing }: ManagerOptions = {}) => {
   };
 
   return VStack({ spacing: 8 }, [
-    HStack({ spacing: 12 }, [
+    HStack({ spacing: 8 }, [
       header ??
         HStack({ spacing: 6 }, [
           Image("square.grid.2x2").font(12).color("accent"),
           Text("Manager").font(13).weight("semibold"),
         ]).fixedSize(),
       Spacer({ minLength: 0 }),
-      ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length)),
+      HStack(
+        { spacing: 7 },
+        ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length)),
+      ).fixedSize(),
       ...(trailing ? [trailing] : []),
     ]),
 
