@@ -24,12 +24,16 @@ export interface ManagerOptions {
    * Drawn in place of the Manager icon and title, beside the tallies: where a host puts its own tabs.
    */
   header?: View;
+  /**
+   * Drawn at the right end of the header row, after the tallies: where a host puts a button of its own.
+   */
+  trailing?: View;
 }
 
 /**
  * The whole Manager panel. Each call owns its search, group filter and folded sections.
  */
-export const manager = ({ header }: ManagerOptions = {}) => {
+export const manager = ({ header, trailing }: ManagerOptions = {}) => {
   const [query, setQuery] = signal("");
   const [groupFilter, setGroupFilter] = signal("");
   const [collapsed, setCollapsed] = signal<Section[]>(["ended"]);
@@ -118,6 +122,7 @@ export const manager = ({ header }: ManagerOptions = {}) => {
         ]).fixedSize(),
       Spacer({ minLength: 0 }),
       ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length)),
+      ...(trailing ? [trailing] : []),
     ]).paddingHorizontal(4),
 
     ForEach({ items: () => (groupChips().length ? ["chips"] : []), key: (item) => item }, () =>

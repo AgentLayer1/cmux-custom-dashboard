@@ -2,7 +2,7 @@
  * Example host sidebar · built from the manager's three levels.
  *
  *   Today    a "Needs you" strip: the model (agentCards, bySection) drawn with a component (cardRow)
- *   Agents   the whole manager, mounted as a page, with the host's tabs in its header row
+ *   Agents   the whole manager, mounted as a page, with the host's tabs in its header row and a reload button at its end
  */
 
 import { cardRow, chip } from "cmux-custom-manager/components";
@@ -38,7 +38,16 @@ sidebar(() =>
         ]).paddingHorizontal(6),
       ]),
     ),
-    pageView("Agents", () => manager({ header: tabs() })),
+    pageView("Agents", () =>
+      manager({
+        header: tabs(),
+        trailing: Text("Reload")
+          .font(11)
+          .color("secondary")
+          .cursor("pointer")
+          .onTap(() => cmux("sidebar.custom.reload", { name: "host" })),
+      }),
+    ),
     Spacer(),
   ]),
 );

@@ -186,7 +186,7 @@ var tally = (section, count) => HStack({ spacing: 4 }, [
 ]).fixedSize();
 
 // src/manager.ts
-var manager = ({ header } = {}) => {
+var manager = ({ header, trailing } = {}) => {
   const [query, setQuery] = signal("");
   const [groupFilter, setGroupFilter] = signal("");
   const [collapsed, setCollapsed] = signal(["ended"]);
@@ -247,7 +247,8 @@ var manager = ({ header } = {}) => {
         Text("Manager").font(13).weight("semibold")
       ]).fixedSize(),
       Spacer({ minLength: 0 }),
-      ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length))
+      ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length)),
+      ...trailing ? [trailing] : []
     ]).paddingHorizontal(4),
     ForEach({ items: () => groupChips().length ? ["chips"] : [], key: (item) => item }, () => HStack({ spacing: 4 }, [
       chip("All", () => !effectiveGroupFilter(), () => setGroupFilter("")),

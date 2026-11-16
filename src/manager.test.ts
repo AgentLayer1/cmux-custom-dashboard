@@ -187,5 +187,15 @@ test("the manager draws its own title, and a host's header in its place", () => 
   const texts = host.visibleTexts();
   expect(texts.slice(0, 2), "the host's tabs lead the manager's header row").toEqual(["Today", "Agents"]);
   expect(texts).not.toContain("Manager");
-  expect(texts.slice(2), "everything after the header is the manager's own").toEqual(own.slice(1));
+  expect(
+    texts.slice(2).filter((text) => text !== "Reload"),
+    "everything after the host's header and button is the manager's own",
+  ).toEqual(own.slice(1));
+});
+
+test("a host's trailing view ends the header row, after the tallies", () => {
+  const host = mount(fixture, HOST);
+  host.tap("Agents");
+  expect(host.visibleTexts().indexOf("Reload"), "the reload button follows the four tallies").toBe(6);
+  expect(host.tap("Reload")).toMatchObject({ method: "sidebar.custom.reload", params: { name: "host" } });
 });

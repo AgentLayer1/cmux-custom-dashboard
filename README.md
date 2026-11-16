@@ -124,7 +124,7 @@ Take whichever level you need:
 |---|---|
 | `cmux-custom-manager/model` | `agentCards` (every session as a card, placed in its section), `bySection`, `jump` to focus a session, and cmux's types |
 | `cmux-custom-manager/components` | `cardRow`, `subagentRow`, `sectionHeader`, `tally`, `chip`, `searchField` |
-| `cmux-custom-manager/manager` | `manager()`, the whole panel, with its own search and filters each time it's mounted. `manager({ header })` draws your view (your tabs, say) in place of its icon and title, beside the tallies |
+| `cmux-custom-manager/manager` | `manager()`, the whole panel, with its own search and filters each time it's mounted. `manager({ header })` draws your view (your tabs, say) in place of its icon and title, beside the tallies, and `trailing` ends the row after them (a reload button, say) |
 
 [`examples/host.ts`](./examples/host.ts) puts all three to work: a two-page sidebar whose Today page draws a "Needs you" strip from the model and the card component, and whose Agents page is the whole manager, with the host's page tabs in its header row.
 
