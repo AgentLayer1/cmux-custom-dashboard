@@ -256,7 +256,6 @@ var manager = ({ header, trailing } = {}) => {
       Spacer()
     ])),
     searchField("Search sessions…", setQuery),
-    Divider(),
     VStack({ spacing: 4 }, [ForEach({ items: entries, key: (entry) => entry.key }, row)]),
     Text(() => entries().length === 0 ? query().trim() || effectiveGroupFilter() ? "No matches." : "No agents running in cmux." : "").font(11).color("tertiary").paddingHorizontal(10),
     Spacer()

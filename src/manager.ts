@@ -144,8 +144,6 @@ export const manager = ({ header, trailing }: ManagerOptions = {}) => {
 
     searchField("Search sessions…", setQuery),
 
-    Divider(),
-
     VStack({ spacing: 4 }, [ForEach({ items: entries, key: (entry) => entry.key }, row)]),
 
     Text(() => (entries().length === 0 ? (query().trim() || effectiveGroupFilter() ? "No matches." : "No agents running in cmux.") : ""))
