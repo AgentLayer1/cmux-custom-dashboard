@@ -1,11 +1,11 @@
 {
-  "name": "cmux-custom-dashboard",
+  "name": "cmux-custom-manager",
   "private": true,
   "type": "module",
   "exports": {
     "./model": "./src/model.ts",
     "./components": "./src/components.ts",
-    "./dashboard": "./src/dashboard.ts"
+    "./manager": "./src/manager.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json && bun scripts/build.ts",

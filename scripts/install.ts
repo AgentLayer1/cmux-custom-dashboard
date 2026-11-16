@@ -3,9 +3,9 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NAME = "dashboard";
+const NAME = "manager";
 const STAGED = `${NAME}-next`;
-const source = fileURLToPath(new URL("../dist/dashboard.js", import.meta.url));
+const source = fileURLToPath(new URL("../dist/manager.js", import.meta.url));
 const sidebars = join(homedir(), ".config", "cmux", "sidebars");
 const live = join(sidebars, `${NAME}.js`);
 const staged = join(sidebars, `${STAGED}.js`);
@@ -26,7 +26,7 @@ try {
   run("cmux", "sidebar", "validate", STAGED);
   renameSync(staged, live);
   run("cmux", "sidebar", "reload", NAME);
-  console.log(`Installed ${readFileSync(live, "utf8").match(/cmux Dashboard · v\S+ \(\d+\)/)?.[0]}`);
+  console.log(`Installed ${readFileSync(live, "utf8").match(/cmux Manager · v\S+ \(\d+\)/)?.[0]}`);
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;

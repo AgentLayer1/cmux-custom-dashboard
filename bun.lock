@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "cmux-custom-dashboard",
+      "name": "cmux-custom-manager",
       "devDependencies": {
         "@types/bun": "^1.4.4",
         "typescript": "^7.0.2",

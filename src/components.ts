@@ -109,8 +109,9 @@ export const searchField = (placeholder: string, onEdit: (text: string) => void)
       .paddingHorizontal(9)
       .paddingVertical(6)
       .background("#7f7f7f24")
-      .cornerRadius(8),
-  ]).paddingHorizontal(4);
+      .cornerRadius(8)
+      .frame({ maxWidth: "infinity" }),
+  ]);
 
 export const sectionHeader = (section: Section, count: () => number, folded: () => boolean, onTap: () => void) =>
   HStack({ spacing: 6 }, [
@@ -200,10 +201,10 @@ export const subagentRow = (row: () => Subagent) => {
 };
 
 export const tally = (section: Section, count: () => number) =>
-  HStack({ spacing: 4 }, [
-    Circle({ size: 7 }).fill(SECTIONS[section].color),
+  HStack({ spacing: 3 }, [
+    Circle({ size: 5 }).fill(SECTIONS[section].color),
     Text(() => String(count()))
-      .font(11)
+      .font(10)
       .weight("semibold")
       .monospaced()
       .color(() => (count() ? "secondary" : "quaternary")),

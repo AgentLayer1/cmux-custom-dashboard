@@ -1,5 +1,5 @@
 /*
- * cmux Dashboard · v0.2.0 (6)
+ * cmux Manager · v0.3.0 (1)
  * Every coding agent in cmux, sorted by what needs you.
  *
  *   NEEDS YOU   waiting on input, or a finished turn you haven't looked at
@@ -9,15 +9,15 @@
  *   ENDED       ended in the last 24 hours (collapsed)
  *
  * Install   bun run install:cmux                       from a clone: checks, validates, installs
- *           cp dist/dashboard.js ~/.config/cmux/sidebars/dashboard.js
- * Open      cmux right-sidebar set custom dashboard    side panel, resizable
- *           cmux sidebar open dashboard                pane tab
- * Check     cmux sidebar validate dashboard
+ *           cp dist/manager.js ~/.config/cmux/sidebars/manager.js
+ * Open      cmux right-sidebar set custom manager      side panel, resizable
+ *           cmux sidebar open manager                  pane tab
+ * Check     cmux sidebar validate manager
  *
  * All state is cmux's own (workspaces[].agents[], children[], tabs[]); this file only draws it.
  * Built from src/, where the comments explaining the code live.
  *
- * https://github.com/AgentLayer1/cmux-custom-dashboard · MIT © 2026 AgentLayer
+ * https://github.com/AgentLayer1/cmux-custom-manager · MIT © 2026 AgentLayer
  */
 
 // src/model.ts
@@ -152,8 +152,8 @@ var searchField = (placeholder, onEdit) => HStack([
   HStack({ spacing: 6 }, [
     Image("magnifyingglass").font(12).color("secondary"),
     TextField("", { placeholder, autofocus: false, onEdit: (text) => onEdit(text ?? "") })
-  ]).paddingHorizontal(9).paddingVertical(6).background("#7f7f7f24").cornerRadius(8)
-]).paddingHorizontal(4);
+  ]).paddingHorizontal(9).paddingVertical(6).background("#7f7f7f24").cornerRadius(8).frame({ maxWidth: "infinity" })
+]);
 var sectionHeader = (section, count, folded, onTap) => HStack({ spacing: 6 }, [
   Text(SECTIONS[section].label).font(10).weight("bold").color(SECTIONS[section].color),
   Text(() => String(count())).font(10).monospaced().color("tertiary"),
@@ -180,13 +180,13 @@ var subagentRow = (row) => {
     Text(() => fmtSpan(epoch() - (child().startedEpoch ?? epoch()))).font(10).monospaced().color("tertiary").fixedSize()
   ]).paddingLeading(26).paddingTrailing(10).paddingVertical(2).cornerRadius(6).hoverBackground("#7f7f7f1c").frame({ maxWidth: "infinity" }).onTap(() => jump(row().workspaceId, row().focusId));
 };
-var tally = (section, count) => HStack({ spacing: 4 }, [
-  Circle({ size: 7 }).fill(SECTIONS[section].color),
-  Text(() => String(count())).font(11).weight("semibold").monospaced().color(() => count() ? "secondary" : "quaternary")
+var tally = (section, count) => HStack({ spacing: 3 }, [
+  Circle({ size: 5 }).fill(SECTIONS[section].color),
+  Text(() => String(count())).font(10).weight("semibold").monospaced().color(() => count() ? "secondary" : "quaternary")
 ]).fixedSize();
 
-// src/dashboard.ts
-var dashboard = () => {
+// src/manager.ts
+var manager = ({ header, trailing } = {}) => {
   const [query, setQuery] = signal("");
   const [groupFilter, setGroupFilter] = signal("");
   const [collapsed, setCollapsed] = signal(["ended"]);
@@ -241,19 +241,20 @@ var dashboard = () => {
     }
   };
   return VStack({ spacing: 8 }, [
-    HStack({ spacing: 12 }, [
-      HStack({ spacing: 6 }, [
+    HStack({ spacing: 8 }, [
+      header ?? HStack({ spacing: 6 }, [
         Image("square.grid.2x2").font(12).color("accent"),
-        Text("Dashboard").font(13).weight("semibold")
+        Text("Manager").font(13).weight("semibold")
       ]).fixedSize(),
       Spacer({ minLength: 0 }),
-      ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length))
-    ]).paddingHorizontal(10),
+      HStack({ spacing: 7 }, ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length))).fixedSize(),
+      ...trailing ? [trailing] : []
+    ]),
     ForEach({ items: () => groupChips().length ? ["chips"] : [], key: (item) => item }, () => HStack({ spacing: 4 }, [
       chip("All", () => !effectiveGroupFilter(), () => setGroupFilter("")),
       ForEach({ items: groupChips, key: (group) => group.id }, (group) => chip(() => group().name, () => effectiveGroupFilter() === group().id, () => setGroupFilter(effectiveGroupFilter() === group().id ? "" : group().id))),
       Spacer()
-    ]).paddingHorizontal(10)),
+    ])),
     searchField("Search sessions…", setQuery),
     Divider(),
     VStack({ spacing: 4 }, [ForEach({ items: entries, key: (entry) => entry.key }, row)]),
@@ -263,4 +264,4 @@ var dashboard = () => {
 };
 
 // src/main.ts
-sidebar(dashboard);
+sidebar(() => manager());

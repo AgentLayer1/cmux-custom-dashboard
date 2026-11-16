@@ -22,7 +22,7 @@ export const bundle = async (entry: string) => {
 };
 
 if (import.meta.main) {
-  const out = join(ROOT, "dist", "dashboard.js");
+  const out = join(ROOT, "dist", "manager.js");
   writeFileSync(out, await bundle("src/main.ts"));
   console.log(`Wrote ${out}`);
 }
