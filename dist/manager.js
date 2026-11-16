@@ -152,8 +152,8 @@ var searchField = (placeholder, onEdit) => HStack([
   HStack({ spacing: 6 }, [
     Image("magnifyingglass").font(12).color("secondary"),
     TextField("", { placeholder, autofocus: false, onEdit: (text) => onEdit(text ?? "") })
-  ]).paddingHorizontal(9).paddingVertical(6).background("#7f7f7f24").cornerRadius(8)
-]).paddingHorizontal(4);
+  ]).paddingHorizontal(9).paddingVertical(6).background("#7f7f7f24").cornerRadius(8).frame({ maxWidth: "infinity" })
+]);
 var sectionHeader = (section, count, folded, onTap) => HStack({ spacing: 6 }, [
   Text(SECTIONS[section].label).font(10).weight("bold").color(SECTIONS[section].color),
   Text(() => String(count())).font(10).monospaced().color("tertiary"),
@@ -249,12 +249,12 @@ var manager = ({ header, trailing } = {}) => {
       Spacer({ minLength: 0 }),
       ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length)),
       ...trailing ? [trailing] : []
-    ]).paddingHorizontal(4),
+    ]),
     ForEach({ items: () => groupChips().length ? ["chips"] : [], key: (item) => item }, () => HStack({ spacing: 4 }, [
       chip("All", () => !effectiveGroupFilter(), () => setGroupFilter("")),
       ForEach({ items: groupChips, key: (group) => group.id }, (group) => chip(() => group().name, () => effectiveGroupFilter() === group().id, () => setGroupFilter(effectiveGroupFilter() === group().id ? "" : group().id))),
       Spacer()
-    ]).paddingHorizontal(4)),
+    ])),
     searchField("Search sessions…", setQuery),
     Divider(),
     VStack({ spacing: 4 }, [ForEach({ items: entries, key: (entry) => entry.key }, row)]),

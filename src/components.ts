@@ -109,8 +109,9 @@ export const searchField = (placeholder: string, onEdit: (text: string) => void)
       .paddingHorizontal(9)
       .paddingVertical(6)
       .background("#7f7f7f24")
-      .cornerRadius(8),
-  ]).paddingHorizontal(4);
+      .cornerRadius(8)
+      .frame({ maxWidth: "infinity" }),
+  ]);
 
 export const sectionHeader = (section: Section, count: () => number, folded: () => boolean, onTap: () => void) =>
   HStack({ spacing: 6 }, [

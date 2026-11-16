@@ -123,7 +123,7 @@ export const manager = ({ header, trailing }: ManagerOptions = {}) => {
       Spacer({ minLength: 0 }),
       ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length)),
       ...(trailing ? [trailing] : []),
-    ]).paddingHorizontal(4),
+    ]),
 
     ForEach({ items: () => (groupChips().length ? ["chips"] : []), key: (item) => item }, () =>
       HStack({ spacing: 4 }, [
@@ -136,7 +136,7 @@ export const manager = ({ header, trailing }: ManagerOptions = {}) => {
           ),
         ),
         Spacer(),
-      ]).paddingHorizontal(4),
+      ]),
     ),
 
     searchField("Search sessions…", setQuery),
