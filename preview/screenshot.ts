@@ -28,7 +28,9 @@ const windowIds = (): string[] => {
   const windows = typeof listed === "object" && listed !== null && "windows" in listed ? listed.windows : [];
   return Array.isArray(windows)
     ? windows.flatMap((window: unknown) =>
-        typeof window === "object" && window !== null && "id" in window && typeof window.id === "string" ? [window.id] : [],
+        typeof window === "object" && window !== null && "id" in window && typeof window.id === "string"
+          ? [window.id]
+          : [],
       )
     : [];
 };
@@ -60,7 +62,9 @@ export const inNewWindow = async <Result>(name: string, body: (window: string) =
   const fresh = await opened(15);
   const [window] = fresh;
   if (fresh.length !== 1 || !window) {
-    throw new Error(`expected one new window, found ${fresh.length}; no other window was touched, close any new one by hand`);
+    throw new Error(
+      `expected one new window, found ${fresh.length}; no other window was touched, close any new one by hand`,
+    );
   }
   try {
     return await body(window);

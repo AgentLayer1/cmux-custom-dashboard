@@ -81,7 +81,15 @@ export const decodePng = (bytes: Uint8Array): Image => {
       const up = y > 0 ? rows[(y - 1) * stride + i] ?? 0 : 0;
       const upLeft = y > 0 && i >= channels ? rows[(y - 1) * stride + i - channels] ?? 0 : 0;
       const predicted =
-        filter === 1 ? left : filter === 2 ? up : filter === 3 ? (left + up) >> 1 : filter === 4 ? paeth(left, up, upLeft) : 0;
+        filter === 1
+          ? left
+          : filter === 2
+            ? up
+            : filter === 3
+              ? (left + up) >> 1
+              : filter === 4
+                ? paeth(left, up, upLeft)
+                : 0;
       rows[y * stride + i] = ((line[i] ?? 0) + predicted) & 255;
     }
   }
@@ -121,7 +129,12 @@ export const encodePng = ({ width, height, pixels }: Image): Uint8Array => {
   for (let y = 0; y < height; y++) {
     raw.set(pixels.subarray(y * stride, (y + 1) * stride), y * (stride + 1) + 1);
   }
-  return Buffer.concat([SIGNATURE, chunk("IHDR", header), chunk("IDAT", deflateSync(raw)), chunk("IEND", new Uint8Array())]);
+  return Buffer.concat([
+    SIGNATURE,
+    chunk("IHDR", header),
+    chunk("IDAT", deflateSync(raw)),
+    chunk("IEND", new Uint8Array()),
+  ]);
 };
 
 export const crop = (image: Image, { x, y, width, height }: Rect): Image => {
@@ -141,19 +154,24 @@ const CORNER = 32;
 const changed = ({ width, pixels }: Image, x1: number, y1: number, x2: number, y2: number): boolean => {
   const a = (y1 * width + x1) * 4;
   const b = (y2 * width + x2) * 4;
-  const distance = [0, 1, 2].reduce((sum, channel) => sum + Math.abs((pixels[a + channel] ?? 0) - (pixels[b + channel] ?? 0)), 0);
+  const distance = [0, 1, 2].reduce(
+    (sum, channel) => sum + Math.abs((pixels[a + channel] ?? 0) - (pixels[b + channel] ?? 0)),
+    0,
+  );
   return distance > CHANGE;
 };
 
 /**
  * Where the right sidebar sits in a shot of a cmux window: its left edge is the column whose colour changes from its
  * neighbour's on nearly every row (the panel's background meets the terminal's), it starts below the mode bar's
- * border, and it stops above the window's rounded corner. Throws when no column changes on nearly every row, rather than cropping the wrong part of the window.
+ * border, and it stops above the window's rounded corner. Throws when no column changes on nearly every row, rather
+ * than cropping the wrong part of the window.
  */
 export const panelRect = (image: Image): Rect => {
   const { width, height } = image;
   const share = (count: number, total: number) => count / total;
-  const columns = Array.from({ length: width - 1 - Math.floor(width / 2) }, (_, index) => Math.floor(width / 2) + index);
+  const middle = Math.floor(width / 2);
+  const columns = Array.from({ length: width - 1 - middle }, (_, index) => middle + index);
   const edges = columns.map((x) => {
     let hits = 0;
     for (let y = 0; y < height; y++) {
