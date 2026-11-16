@@ -19,10 +19,17 @@ interface SubagentEntry extends Subagent {
 
 type Entry = HeaderEntry | CardEntry | SubagentEntry;
 
+export interface ManagerOptions {
+  /**
+   * Drawn in place of the Manager icon and title, beside the tallies: where a host puts its own tabs.
+   */
+  header?: View;
+}
+
 /**
- * The whole dashboard panel. Each call owns its search, group filter and folded sections.
+ * The whole Manager panel. Each call owns its search, group filter and folded sections.
  */
-export const dashboard = () => {
+export const manager = ({ header }: ManagerOptions = {}) => {
   const [query, setQuery] = signal("");
   const [groupFilter, setGroupFilter] = signal("");
   const [collapsed, setCollapsed] = signal<Section[]>(["ended"]);
@@ -104,10 +111,11 @@ export const dashboard = () => {
 
   return VStack({ spacing: 8 }, [
     HStack({ spacing: 12 }, [
-      HStack({ spacing: 6 }, [
-        Image("square.grid.2x2").font(12).color("accent"),
-        Text("Dashboard").font(13).weight("semibold"),
-      ]).fixedSize(),
+      header ??
+        HStack({ spacing: 6 }, [
+          Image("square.grid.2x2").font(12).color("accent"),
+          Text("Manager").font(13).weight("semibold"),
+        ]).fixedSize(),
       Spacer({ minLength: 0 }),
       ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length)),
     ]).paddingHorizontal(10),

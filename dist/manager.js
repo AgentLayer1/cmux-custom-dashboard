@@ -1,5 +1,5 @@
 /*
- * cmux Dashboard · v0.2.0 (6)
+ * cmux Manager · v0.3.0 (1)
  * Every coding agent in cmux, sorted by what needs you.
  *
  *   NEEDS YOU   waiting on input, or a finished turn you haven't looked at
@@ -9,15 +9,15 @@
  *   ENDED       ended in the last 24 hours (collapsed)
  *
  * Install   bun run install:cmux                       from a clone: checks, validates, installs
- *           cp dist/dashboard.js ~/.config/cmux/sidebars/dashboard.js
- * Open      cmux right-sidebar set custom dashboard    side panel, resizable
- *           cmux sidebar open dashboard                pane tab
- * Check     cmux sidebar validate dashboard
+ *           cp dist/manager.js ~/.config/cmux/sidebars/manager.js
+ * Open      cmux right-sidebar set custom manager      side panel, resizable
+ *           cmux sidebar open manager                  pane tab
+ * Check     cmux sidebar validate manager
  *
  * All state is cmux's own (workspaces[].agents[], children[], tabs[]); this file only draws it.
  * Built from src/, where the comments explaining the code live.
  *
- * https://github.com/AgentLayer1/cmux-custom-dashboard · MIT © 2026 AgentLayer
+ * https://github.com/AgentLayer1/cmux-custom-manager · MIT © 2026 AgentLayer
  */
 
 // src/model.ts
@@ -185,8 +185,8 @@ var tally = (section, count) => HStack({ spacing: 4 }, [
   Text(() => String(count())).font(11).weight("semibold").monospaced().color(() => count() ? "secondary" : "quaternary")
 ]).fixedSize();
 
-// src/dashboard.ts
-var dashboard = () => {
+// src/manager.ts
+var manager = ({ header } = {}) => {
   const [query, setQuery] = signal("");
   const [groupFilter, setGroupFilter] = signal("");
   const [collapsed, setCollapsed] = signal(["ended"]);
@@ -242,9 +242,9 @@ var dashboard = () => {
   };
   return VStack({ spacing: 8 }, [
     HStack({ spacing: 12 }, [
-      HStack({ spacing: 6 }, [
+      header ?? HStack({ spacing: 6 }, [
         Image("square.grid.2x2").font(12).color("accent"),
-        Text("Dashboard").font(13).weight("semibold")
+        Text("Manager").font(13).weight("semibold")
       ]).fixedSize(),
       Spacer({ minLength: 0 }),
       ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length))
@@ -263,4 +263,4 @@ var dashboard = () => {
 };
 
 // src/main.ts
-sidebar(dashboard);
+sidebar(() => manager());

@@ -1,5 +1,5 @@
 /*
- * cmux Dashboard · v0.2.0 (6)
+ * cmux Manager · v0.3.0 (1)
  * Every coding agent in cmux, sorted by what needs you.
  *
  *   NEEDS YOU   waiting on input, or a finished turn you haven't looked at
@@ -9,17 +9,17 @@
  *   ENDED       ended in the last 24 hours (collapsed)
  *
  * Install   bun run install:cmux                       from a clone: checks, validates, installs
- *           cp dist/dashboard.js ~/.config/cmux/sidebars/dashboard.js
- * Open      cmux right-sidebar set custom dashboard    side panel, resizable
- *           cmux sidebar open dashboard                pane tab
- * Check     cmux sidebar validate dashboard
+ *           cp dist/manager.js ~/.config/cmux/sidebars/manager.js
+ * Open      cmux right-sidebar set custom manager      side panel, resizable
+ *           cmux sidebar open manager                  pane tab
+ * Check     cmux sidebar validate manager
  *
  * All state is cmux's own (workspaces[].agents[], children[], tabs[]); this file only draws it.
  * Built from src/, where the comments explaining the code live.
  *
- * https://github.com/AgentLayer1/cmux-custom-dashboard · MIT © 2026 AgentLayer
+ * https://github.com/AgentLayer1/cmux-custom-manager · MIT © 2026 AgentLayer
  */
 
-import { dashboard } from "./dashboard.ts";
+import { manager } from "./manager.ts";
 
-sidebar(dashboard);
+sidebar(() => manager());

@@ -11,7 +11,7 @@ const RUNTIME =
   process.env.CMUX_SIDEBAR_RUNTIME ??
   "/Applications/cmux.app/Contents/Resources/CmuxSwiftRenderUI_CmuxSwiftRenderUI.bundle/Contents/Resources/SidebarRuntime.js";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const DASHBOARD = readFileSync(join(ROOT, "dist", "dashboard.js"), "utf8");
+const MANAGER = readFileSync(join(ROOT, "dist", "manager.js"), "utf8");
 const HOST = await bundle("examples/host.ts");
 
 type Op =
@@ -34,7 +34,7 @@ interface Action {
   params?: Record<string, string>;
 }
 
-const mount = (data: typeof fixture, script = DASHBOARD) => {
+const mount = (data: typeof fixture, script = MANAGER) => {
   const nodes = new Map<string, SceneNode>();
   const actions: Action[] = [];
   let root = "";
@@ -126,8 +126,8 @@ const FULL_OUTLINE = [
   "ENDED",
 ];
 
-test("dist/dashboard.js is built from the current source", async () => {
-  expect(await bundle("src/main.ts"), "dist is stale: run `bun run build`").toBe(DASHBOARD);
+test("dist/manager.js is built from the current source", async () => {
+  expect(await bundle("src/main.ts"), "dist is stale: run `bun run build`").toBe(MANAGER);
 });
 
 test("sorts sessions by what needs you, with subagents under their session and Ended collapsed", () => {
@@ -167,7 +167,7 @@ test("a host sidebar draws its own Needs-you strip from the model, with cards th
   expect(tap("Dark mode audit")?.method).toBe("surface.focus");
 });
 
-test("a host sidebar mounts the whole dashboard as a page, and again after leaving it", () => {
+test("a host sidebar mounts the whole manager as a page, and again after leaving it", () => {
   const { visibleTexts, tap, type } = mount(fixture, HOST);
   tap("Agents");
   expect(outline(visibleTexts())).toEqual(FULL_OUTLINE);
@@ -176,5 +176,16 @@ test("a host sidebar mounts the whole dashboard as a page, and again after leavi
   tap("Today");
   expect(outline(visibleTexts())).toEqual(["Partial refunds design", "Dark mode audit"]);
   tap("Agents");
-  expect(outline(visibleTexts()), "a remounted dashboard starts with an empty search").toEqual(FULL_OUTLINE);
+  expect(outline(visibleTexts()), "a remounted manager starts with an empty search").toEqual(FULL_OUTLINE);
+});
+
+test("the manager draws its own title, and a host's header in its place", () => {
+  const own = mount(fixture).visibleTexts();
+  expect(own[0]).toBe("Manager");
+  const host = mount(fixture, HOST);
+  host.tap("Agents");
+  const texts = host.visibleTexts();
+  expect(texts.slice(0, 2), "the host's tabs lead the manager's header row").toEqual(["Today", "Agents"]);
+  expect(texts).not.toContain("Manager");
+  expect(texts.slice(2), "everything after the header is the manager's own").toEqual(own.slice(1));
 });

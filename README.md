@@ -1,6 +1,6 @@
 <div align="center">
 
-# cmux Dashboard
+# cmux Manager
 
 **Every coding agent running in [cmux](https://cmux.com), sorted by what needs you.**
 
@@ -16,7 +16,7 @@ One file. No setup, no network, no background process. Part of [AgentLayer's wor
 <tr>
 <td width="300" valign="top">
 
-<img src="./assets/screenshot.png" alt="The dashboard in cmux's right sidebar: sessions grouped into Needs you, Running, Recent and Idle, with subagents listed under their session" width="286" />
+<img src="./assets/screenshot.png" alt="The manager in cmux's right sidebar: sessions grouped into Needs you, Running, Recent and Idle, with subagents listed under their session" width="286" />
 
 </td>
 <td valign="top">
@@ -55,20 +55,22 @@ Every Claude Code and Codex session across all your workspaces, one card each, s
 
 You need macOS and the [cmux](https://cmux.com) app, version 0.65.2 or newer, with Custom Sidebars turned on (they are by default). Agents show up once they run in cmux terminals with cmux's hooks (`cmux hooks setup`).
 
-**1. Download the dashboard** into cmux's sidebar folder:
+**1. Download the manager** into cmux's sidebar folder:
 
 ```sh
-mkdir -p ~/.config/cmux/sidebars && curl -fsSL https://raw.githubusercontent.com/AgentLayer1/cmux-custom-dashboard/main/dist/dashboard.js -o ~/.config/cmux/sidebars/dashboard.js
+mkdir -p ~/.config/cmux/sidebars && curl -fsSL https://raw.githubusercontent.com/AgentLayer1/cmux-custom-manager/main/dist/manager.js -o ~/.config/cmux/sidebars/manager.js
 ```
 
 **2. Open it**, as a panel on the right or as a tab:
 
 ```sh
-cmux right-sidebar set custom dashboard
-cmux sidebar open dashboard
+cmux right-sidebar set custom manager
+cmux sidebar open manager
 ```
 
 That's it. To update, run the same `curl` again; cmux reloads the sidebar on its own.
+
+Coming from **cmux Dashboard** (this project's name before v0.3.0)? Run step 1, then `rm ~/.config/cmux/sidebars/dashboard.js`, and point any `right-sidebar set custom dashboard` button or command at `manager`.
 
 <details>
 <summary><b>3. Optional: a one-click toolbar button</b></summary>
@@ -80,23 +82,23 @@ Add an action and a tab-bar button to `~/.config/cmux/cmux.json` (back the file 
 ```json
 {
   "actions": {
-    "dashboard": {
+    "manager": {
       "type": "command",
-      "title": "Dashboard",
+      "title": "Manager",
       "icon": { "type": "symbol", "name": "square.grid.2x2" },
-      "command": "cmux right-sidebar set custom dashboard && exit",
+      "command": "cmux right-sidebar set custom manager && exit",
       "target": "newTabInCurrentPane"
     }
   },
   "ui": {
     "surfaceTabBar": {
-      "buttons": ["cmux.newTerminal", "cmux.splitRight", "cmux.splitDown", "dashboard"]
+      "buttons": ["cmux.newTerminal", "cmux.splitRight", "cmux.splitDown", "manager"]
     }
   }
 }
 ```
 
-The command runs in a new terminal tab, and `exit` closes that tab once the panel is open. `buttons` lists every button the tab bar shows, so keep the ones you already have and put `"dashboard"` where you want it. Then apply it without restarting:
+The command runs in a new terminal tab, and `exit` closes that tab once the panel is open. `buttons` lists every button the tab bar shows, so keep the ones you already have and put `"manager"` where you want it. Then apply it without restarting:
 
 ```sh
 cmux reload-config
@@ -111,20 +113,20 @@ cmux reload-config
 Building a custom sidebar of your own? Add this repo from GitHub and bundle it into your sidebar with Bun:
 
 ```sh
-bun add github:AgentLayer1/cmux-custom-dashboard
+bun add github:AgentLayer1/cmux-custom-manager
 ```
 
-That installs `main`, and `bun.lock` records the exact commit. To move to the latest `main` later, run `bun update cmux-custom-dashboard`.
+That installs `main`, and `bun.lock` records the exact commit. To move to the latest `main` later, run `bun update cmux-custom-manager`.
 
 Take whichever level you need:
 
 | Import | Gives you |
 |---|---|
-| `cmux-custom-dashboard/model` | `agentCards` (every session as a card, placed in its section), `bySection`, `jump` to focus a session, and cmux's types |
-| `cmux-custom-dashboard/components` | `cardRow`, `subagentRow`, `sectionHeader`, `tally`, `chip`, `searchField` |
-| `cmux-custom-dashboard/dashboard` | `dashboard()`, the whole panel, with its own search and filters each time it's mounted |
+| `cmux-custom-manager/model` | `agentCards` (every session as a card, placed in its section), `bySection`, `jump` to focus a session, and cmux's types |
+| `cmux-custom-manager/components` | `cardRow`, `subagentRow`, `sectionHeader`, `tally`, `chip`, `searchField` |
+| `cmux-custom-manager/manager` | `manager()`, the whole panel, with its own search and filters each time it's mounted. `manager({ header })` draws your view (your tabs, say) in place of its icon and title, beside the tallies |
 
-[`examples/host.ts`](./examples/host.ts) puts all three to work: a two-page sidebar whose Today page draws a "Needs you" strip from the model and the card component, and whose Agents page is the whole dashboard.
+[`examples/host.ts`](./examples/host.ts) puts all three to work: a two-page sidebar whose Today page draws a "Needs you" strip from the model and the card component, and whose Agents page is the whole manager, with the host's page tabs in its header row.
 
 ---
 
@@ -134,23 +136,23 @@ Written in TypeScript and tested on cmux's own sidebar runtime. You need [Bun](h
 
 | Command | Does |
 |---|---|
-| `bun run install:cmux` | Checks, then installs into cmux, but only after cmux validates it. A failure leaves your installed dashboard alone. Run it from a cmux terminal, where the `cmux` command is on your PATH. |
+| `bun run install:cmux` | Checks, then installs into cmux, but only after cmux validates it. A failure leaves your installed manager alone. Run it from a cmux terminal, where the `cmux` command is on your PATH. |
 | `bun run check` | Typecheck, build and tests. |
-| `bun run build` | Bundles [`src/main.ts`](./src/main.ts) into [`dist/dashboard.js`](./dist/dashboard.js). |
+| `bun run build` | Bundles [`src/main.ts`](./src/main.ts) into [`dist/manager.js`](./dist/manager.js). |
 | `bun run test` | Tests only. |
 | `bun run typecheck` | Typecheck only. |
-| `bun run preview` | Builds `dashboard-preview`, the dashboard drawing made-up sessions. |
+| `bun run preview` | Builds `manager-preview`, the manager drawing made-up sessions. |
 
 <details>
 <summary><b>How the build works</b></summary>
 
 <br>
 
-`src/` is the source of truth, in three layers a sidebar can import: [`model.ts`](./src/model.ts) (the agent data), [`components.ts`](./src/components.ts) (the rows and controls) and [`dashboard.ts`](./src/dashboard.ts) (the whole panel). [`main.ts`](./src/main.ts) carries the header and mounts the panel.
+`src/` is the source of truth, in three layers a sidebar can import: [`model.ts`](./src/model.ts) (the agent data), [`components.ts`](./src/components.ts) (the rows and controls) and [`manager.ts`](./src/manager.ts) (the whole panel). [`main.ts`](./src/main.ts) carries the header and mounts the panel.
 
-cmux loads one script, so [`scripts/build.ts`](./scripts/build.ts) bundles `main.ts` with Bun into `dist/dashboard.js`, headed by `main.ts`'s comment. The bundle is readable but drops the other comments; they stay in `src/`. It's committed so people can download it, and a test fails when it falls behind the source.
+cmux loads one script, so [`scripts/build.ts`](./scripts/build.ts) bundles `main.ts` with Bun into `dist/manager.js`, headed by `main.ts`'s comment. The bundle is readable but drops the other comments; they stay in `src/`. It's committed so people can download it, and a test fails when it falls behind the source.
 
-Before bundling, the build typechecks against only [`src/runtime.d.ts`](./src/runtime.d.ts), not Bun's or Node's types, so the dashboard can't reach for an API cmux's runtime doesn't have.
+Before bundling, the build typechecks against only [`src/runtime.d.ts`](./src/runtime.d.ts), not Bun's or Node's types, so the manager can't reach for an API cmux's runtime doesn't have.
 
 </details>
 
@@ -162,12 +164,12 @@ Before bundling, the build typechecks against only [`src/runtime.d.ts`](./src/ru
 The file's header carries a version and build, such as `v0.1.1 (4)`:
 
 - **Build** goes up by one every time a change is installed.
-- **Version** follows [semver](https://semver.org) for changes someone using the dashboard would notice.
+- **Version** follows [semver](https://semver.org) for changes someone using the manager would notice.
 
 To see which one you have installed:
 
 ```sh
-grep -m1 "cmux Dashboard · v" ~/.config/cmux/sidebars/dashboard.js
+grep -m1 "cmux Manager · v" ~/.config/cmux/sidebars/manager.js
 ```
 
 </details>
@@ -177,7 +179,7 @@ grep -m1 "cmux Dashboard · v" ~/.config/cmux/sidebars/dashboard.js
 
 <br>
 
-[`src/dashboard.test.ts`](./src/dashboard.test.ts) runs the built `dist/dashboard.js`, the file people install, on cmux's own sidebar runtime. It rebuilds the scene from the operations the runtime sends to the app and taps it the way cmux does.
+[`src/manager.test.ts`](./src/manager.test.ts) runs the built `dist/manager.js`, the file people install, on cmux's own sidebar runtime. It rebuilds the scene from the operations the runtime sends to the app and taps it the way cmux does.
 
 cmux's runtime is GPL-licensed, so it isn't copied into this repo. The tests load `SidebarRuntime.js` from the installed app, at `/Applications/cmux.app/Contents/Resources/CmuxSwiftRenderUI_CmuxSwiftRenderUI.bundle/Contents/Resources/`. Set `CMUX_SIDEBAR_RUNTIME` to test against a different copy.
 
@@ -188,12 +190,12 @@ cmux's runtime is GPL-licensed, so it isn't copied into this repo. The tests loa
 
 <br>
 
-[`preview/fixture.ts`](./preview/fixture.ts) holds invented workspaces and sessions covering every section, with a frozen clock. `bun run preview` wraps the real dashboard so it draws the fixture instead of your sessions, and writes it to `~/.config/cmux/sidebars/dashboard-preview.js` (pass a path to write it elsewhere). Taps do nothing in the preview. It's how the screenshot above is made:
+[`preview/fixture.ts`](./preview/fixture.ts) holds invented workspaces and sessions covering every section, with a frozen clock. `bun run preview` wraps the real manager so it draws the fixture instead of your sessions, and writes it to `~/.config/cmux/sidebars/manager-preview.js` (pass a path to write it elsewhere). Taps do nothing in the preview. It's how the screenshot above is made:
 
 ```sh
-bun run preview && cmux right-sidebar set custom dashboard-preview
+bun run preview && cmux right-sidebar set custom manager-preview
 cmux shot --out assets/screenshot-full.png        # then crop the panel into assets/screenshot.png
-rm ~/.config/cmux/sidebars/dashboard-preview.js && cmux right-sidebar set custom dashboard
+rm ~/.config/cmux/sidebars/manager-preview.js && cmux right-sidebar set custom manager
 ```
 
 </details>
@@ -211,7 +213,7 @@ cmux publishes no types for custom sidebars, so [`src/runtime.d.ts`](./src/runti
 | Data shape: `workspaces`, `agents`, `children`, `tabs`, `groups`, `clock` | `Packages/macOS/CmuxSidebar/Sources/CmuxSidebar/Layout/CustomSidebarDataContextBuilder.swift` |
 | What each field means and when it's present | `docs/custom-sidebars.md` |
 
-After a cmux release, diff those paths between the release tags in a cmux checkout, mirror any change in `runtime.d.ts`, update the version in its header, and run `bun run check`. The typecheck then points at any dashboard or fixture code the change breaks.
+After a cmux release, diff those paths between the release tags in a cmux checkout, mirror any change in `runtime.d.ts`, update the version in its header, and run `bun run check`. The typecheck then points at any manager or fixture code the change breaks.
 
 ```sh
 git -C <cmux checkout> fetch --tags && git -C <cmux checkout> diff v0.65.2.2 v<new> -- Packages/macOS/CmuxSwiftRenderUI/Sources/CmuxSwiftRenderUI/Resources/SidebarRuntime.js Packages/macOS/CmuxSidebar/Sources/CmuxSidebar/Layout/CustomSidebarDataContextBuilder.swift docs/custom-sidebars.md
@@ -224,12 +226,12 @@ git -C <cmux checkout> fetch --tags && git -C <cmux checkout> diff v0.65.2.2 v<n
 
 <br>
 
-These come from the data cmux gives custom sidebars, not from the dashboard. Checked against cmux 0.65.2.
+These come from the data cmux gives custom sidebars, not from the manager. Checked against cmux 0.65.2.
 
 | | Limit | cmux issue |
 |:---:|---|---|
 | 🟡 | **A finished session can stay in Running.** When Claude Code's Stop hook doesn't fire (an Esc interrupt, a timed-out hook), cmux's built-in sidebar settles the session but `agents[].status` keeps saying it's working. | [#39157](https://github.com/manaflow-ai/cmux/issues/39157) |
-| 🟡 | **`agents[].surfaceId` can't focus a tab.** The dashboard focuses through the hosting tab's `tabs[k].surfaceId` instead, so clicking a card works today. | [#39154](https://github.com/manaflow-ai/cmux/issues/39154) |
+| 🟡 | **`agents[].surfaceId` can't focus a tab.** The manager focuses through the hosting tab's `tabs[k].surfaceId` instead, so clicking a card works today. | [#39154](https://github.com/manaflow-ai/cmux/issues/39154) |
 | ✅ | **No group chips in the right-hand panel.** cmux 0.65.2 doesn't pass workspace groups there; they show in the left sidebar and as a tab. | [#20281](https://github.com/manaflow-ai/cmux/issues/20281) |
 | ✅ | **Background subagents drop off when the turn ends**, even while they keep running. | [#20283](https://github.com/manaflow-ai/cmux/issues/20283) |
 
