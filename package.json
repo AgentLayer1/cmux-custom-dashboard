@@ -12,6 +12,7 @@
     "check": "bun run typecheck && bun run build && bun test",
     "install:cmux": "bun scripts/install.ts",
     "preview": "bun run build && bun preview/build.ts",
+    "screenshot": "bun run build && bun preview/screenshot.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
