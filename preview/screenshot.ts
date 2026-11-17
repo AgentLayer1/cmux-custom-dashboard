@@ -7,7 +7,7 @@ import { crop, decodePng, encodePng, panelRect } from "./png.ts";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
-export interface Step {
+interface Step {
   args: string[];
   /**
    * Milliseconds to wait before running it, for cmux to draw what the steps before it changed.
@@ -48,7 +48,7 @@ const runSteps = async (steps: readonly Step[]): Promise<void> => {
  * Runs `body` in a window it opens for the purpose and always closes, so nothing it does can reach the windows that
  * were already open: the new window is the one id that wasn't listed before, and every step names it.
  */
-export const inNewWindow = async <Result>(name: string, body: (window: string) => Promise<Result>): Promise<Result> => {
+const inNewWindow = async <Result>(name: string, body: (window: string) => Promise<Result>): Promise<Result> => {
   const before = new Set(windowIds());
   cmux("new-window", "--name", name);
   const opened = async (tries: number): Promise<string[]> => {
@@ -83,9 +83,9 @@ export const shotSteps = (window: string, sidebar: string, out: string): Step[] 
 ];
 
 /**
- * Writes `image`'s right sidebar to `out`, cropped by panelRect.
+ * Writes the right sidebar of the window shot at `full` to `out`, cropped by panelRect.
  */
-export const writePanel = (full: string, out: string): void => {
+const writePanel = (full: string, out: string): void => {
   const image = decodePng(readFileSync(full));
   writeFileSync(out, encodePng(crop(image, panelRect(image))));
 };

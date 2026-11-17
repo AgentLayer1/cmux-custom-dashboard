@@ -17,7 +17,6 @@ export interface Rect {
 }
 
 const SIGNATURE = Uint8Array.of(137, 80, 78, 71, 13, 10, 26, 10);
-const RGB = 2;
 const RGBA = 6;
 
 interface Chunk {
@@ -52,7 +51,7 @@ const paeth = (left: number, up: number, upLeft: number): number => {
 };
 
 /**
- * Decodes the PNGs `cmux shot` writes: 8-bit RGB or RGBA, not interlaced. Anything else is refused, never guessed at.
+ * Decodes the PNGs `cmux shot` writes: 8-bit RGBA, not interlaced. Anything else is refused, never guessed at.
  */
 export const decodePng = (bytes: Uint8Array): Image => {
   if (!SIGNATURE.every((value, index) => bytes[index] === value)) {
@@ -66,10 +65,10 @@ export const decodePng = (bytes: Uint8Array): Image => {
   const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
   const [width, height] = [view.getUint32(0), view.getUint32(4)];
   const [depth, colorType, interlace] = [header[8], header[9], header[12]];
-  if (depth !== 8 || (colorType !== RGB && colorType !== RGBA) || interlace !== 0) {
+  if (depth !== 8 || colorType !== RGBA || interlace !== 0) {
     throw new Error(`unsupported PNG: depth ${depth}, colour type ${colorType}, interlace ${interlace}`);
   }
-  const channels = colorType === RGBA ? 4 : 3;
+  const channels = 4;
   const stride = width * channels;
   const raw = inflateSync(Buffer.concat(chunks.filter((chunk) => chunk.type === "IDAT").map((chunk) => chunk.body)));
   const rows = new Uint8Array(height * stride);
@@ -93,15 +92,7 @@ export const decodePng = (bytes: Uint8Array): Image => {
       rows[y * stride + i] = ((line[i] ?? 0) + predicted) & 255;
     }
   }
-  if (channels === 4) {
-    return { width, height, pixels: rows };
-  }
-  const pixels = new Uint8Array(width * height * 4);
-  for (let pixel = 0; pixel < width * height; pixel++) {
-    pixels.set(rows.subarray(pixel * 3, pixel * 3 + 3), pixel * 4);
-    pixels[pixel * 4 + 3] = 255;
-  }
-  return { width, height, pixels };
+  return { width, height, pixels: rows };
 };
 
 const chunk = (type: string, body: Uint8Array): Uint8Array => {
@@ -151,45 +142,41 @@ const ALWAYS = 0.95;
 // The window's rounded bottom corner, in pixels at 2x, left off so it doesn't show as a black curve.
 const CORNER = 32;
 
-const changed = ({ width, pixels }: Image, x1: number, y1: number, x2: number, y2: number): boolean => {
-  const a = (y1 * width + x1) * 4;
-  const b = (y2 * width + x2) * 4;
-  const distance = [0, 1, 2].reduce(
-    (sum, channel) => sum + Math.abs((pixels[a + channel] ?? 0) - (pixels[b + channel] ?? 0)),
-    0,
-  );
-  return distance > CHANGE;
+const changed = (pixels: Uint8Array, a: number, b: number): boolean =>
+  Math.abs((pixels[a] ?? 0) - (pixels[b] ?? 0)) +
+    Math.abs((pixels[a + 1] ?? 0) - (pixels[b + 1] ?? 0)) +
+    Math.abs((pixels[a + 2] ?? 0) - (pixels[b + 2] ?? 0)) >
+  CHANGE;
+
+// Whether at least ALWAYS of `count` probes change, giving up as soon as too many haven't.
+const nearlyAll = (count: number, changesAt: (index: number) => boolean): boolean => {
+  const allowed = Math.floor(count * (1 - ALWAYS));
+  let misses = 0;
+  for (let index = 0; index < count && misses <= allowed; index++) {
+    misses += changesAt(index) ? 0 : 1;
+  }
+  return misses <= allowed;
 };
 
 /**
- * Where the right sidebar sits in a shot of a cmux window: its left edge is the column whose colour changes from its
- * neighbour's on nearly every row (the panel's background meets the terminal's), it starts below the mode bar's
- * border, and it stops above the window's rounded corner. Throws when no column changes on nearly every row, rather
- * than cropping the wrong part of the window.
+ * Where the right sidebar sits in a shot of a cmux window: its left edge is the first column right of the middle whose
+ * colour changes from its neighbour's on nearly every row (the panel's background meets the terminal's), it starts
+ * below the mode bar's border, and it stops above the window's rounded corner. Throws when no column changes on nearly
+ * every row, rather than cropping the wrong part of the window.
  */
-export const panelRect = (image: Image): Rect => {
-  const { width, height } = image;
-  const share = (count: number, total: number) => count / total;
+export const panelRect = ({ width, height, pixels }: Image): Rect => {
+  const at = (x: number, y: number) => (y * width + x) * 4;
   const middle = Math.floor(width / 2);
-  const columns = Array.from({ length: width - 1 - middle }, (_, index) => middle + index);
-  const edges = columns.map((x) => {
-    let hits = 0;
-    for (let y = 0; y < height; y++) {
-      hits += changed(image, x - 1, y, x, y) ? 1 : 0;
-    }
-    return { x, share: share(hits, height) };
-  });
-  const left = edges.reduce((best, edge) => (edge.share > best.share ? edge : best), { x: 0, share: 0 });
-  if (left.share < ALWAYS) {
-    throw new Error(`no panel edge found: the strongest column changes on ${Math.round(left.share * 100)}% of rows`);
+  const left = Array.from({ length: width - 1 - middle }, (_, index) => middle + index).find((x) =>
+    nearlyAll(height, (y) => changed(pixels, at(x - 1, y), at(x, y))),
+  );
+  if (left === undefined) {
+    throw new Error("no panel edge found: no column changes colour on nearly every row");
   }
+  const inside = width - left - 2;
   const rows = Array.from({ length: Math.floor(height * 0.15) - 1 }, (_, index) => index + 1);
-  const top = rows.reduce((lowest, y) => {
-    let hits = 0;
-    for (let x = left.x + 2; x < width; x++) {
-      hits += changed(image, x, y - 1, x, y) ? 1 : 0;
-    }
-    return share(hits, width - left.x - 2) >= ALWAYS ? y : lowest;
-  }, 0);
-  return { x: left.x, y: top, width: width - left.x, height: height - top - CORNER };
+  const crossesRow = (y: number) =>
+    nearlyAll(inside, (index) => changed(pixels, at(left + 2 + index, y - 1), at(left + 2 + index, y)));
+  const top = rows.findLast(crossesRow) ?? 0;
+  return { x: left, y: top, width: width - left, height: height - top - CORNER };
 };
