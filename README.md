@@ -14,9 +14,9 @@ One file. No setup, no network, no background process. Part of [AgentLayer's wor
 
 <table>
 <tr>
-<td width="300" valign="top">
+<td width="350" valign="top">
 
-<img src="./assets/screenshot.png" alt="The manager in cmux's right sidebar: sessions grouped into Needs you, Running, Recent and Idle, with subagents listed under their session" width="286" />
+<img src="./assets/screenshot.png" alt="The manager in cmux's right sidebar: sessions grouped into Needs you, Running, Recent and Idle, with subagents listed under their session" width="336" />
 
 </td>
 <td valign="top">
