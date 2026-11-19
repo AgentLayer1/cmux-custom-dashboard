@@ -3,13 +3,22 @@
 const RECENT_SECS = 60 * 60;
 const ENDED_SECS = 24 * 60 * 60;
 
+/**
+ * How a section's header is drawn: its label, colour and SF Symbol.
+ */
+export interface SectionLook {
+  label: string;
+  color: string;
+  icon: string;
+}
+
 export const SECTIONS = {
-  needs: { label: "NEEDS YOU", color: "#FF9F0A" },
-  running: { label: "RUNNING", color: "#34C759" },
-  recent: { label: "RECENT", color: "#0A84FF" },
-  idle: { label: "IDLE", color: "#8E8E93" },
-  ended: { label: "ENDED", color: "#8E8E9366" },
-};
+  needs: { label: "NEEDS YOU", color: "#FF9F0A", icon: "hand.raised.fill" },
+  running: { label: "RUNNING", color: "#34C759", icon: "play.fill" },
+  recent: { label: "RECENT", color: "#0A84FF", icon: "clock.fill" },
+  idle: { label: "IDLE", color: "#8E8E93", icon: "moon.zzz.fill" },
+  ended: { label: "ENDED", color: "#8E8E9366", icon: "stop.fill" },
+} satisfies Record<string, SectionLook>;
 export type Section = keyof typeof SECTIONS;
 // Object.keys widens the keys to string.
 export const ORDER = Object.keys(SECTIONS) as Section[];

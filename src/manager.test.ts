@@ -99,7 +99,13 @@ const mount = (data: typeof fixture, script = MANAGER) => {
     const field = walk(root).find((id) => nodes.get(id)?.type === "textfield");
     context.__dispatch(field, "edit", JSON.stringify({ text }));
   };
-  return { visibleTexts, tap, type };
+  const images = () =>
+    walk(root)
+      .map((id) => nodes.get(id))
+      .filter((node) => node?.type === "image")
+      .map((node) => String(node?.props.systemName ?? ""))
+      .filter(Boolean);
+  return { visibleTexts, tap, type, images };
 };
 
 const HEADERS = ["NEEDS YOU", "RUNNING", "RECENT", "IDLE", "ENDED"];
@@ -198,4 +204,9 @@ test("a host's trailing view ends the header row, after the tallies", () => {
   host.tap("Agents");
   expect(host.visibleTexts().indexOf("Reload"), "the reload button follows the four tallies").toBe(6);
   expect(host.tap("Reload")).toMatchObject({ method: "sidebar.custom.reload", params: { name: "host" } });
+});
+
+test("every section header leads with its icon", () => {
+  const { images } = mount(fixture);
+  expect(images()).toEqual(expect.arrayContaining(["hand.raised.fill", "play.fill", "clock.fill", "moon.zzz.fill", "stop.fill"]));
 });

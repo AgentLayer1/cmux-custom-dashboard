@@ -115,6 +115,7 @@ export const searchField = (placeholder: string, onEdit: (text: string) => void)
 
 export const sectionHeader = (section: Section, count: () => number, folded: () => boolean, onTap: () => void) =>
   HStack({ spacing: 6 }, [
+    Image(SECTIONS[section].icon).font(9).color(SECTIONS[section].color),
     Text(SECTIONS[section].label).font(10).weight("bold").color(SECTIONS[section].color),
     Text(() => String(count()))
       .font(10)

@@ -24,11 +24,11 @@
 var RECENT_SECS = 60 * 60;
 var ENDED_SECS = 24 * 60 * 60;
 var SECTIONS = {
-  needs: { label: "NEEDS YOU", color: "#FF9F0A" },
-  running: { label: "RUNNING", color: "#34C759" },
-  recent: { label: "RECENT", color: "#0A84FF" },
-  idle: { label: "IDLE", color: "#8E8E93" },
-  ended: { label: "ENDED", color: "#8E8E9366" }
+  needs: { label: "NEEDS YOU", color: "#FF9F0A", icon: "hand.raised.fill" },
+  running: { label: "RUNNING", color: "#34C759", icon: "play.fill" },
+  recent: { label: "RECENT", color: "#0A84FF", icon: "clock.fill" },
+  idle: { label: "IDLE", color: "#8E8E93", icon: "moon.zzz.fill" },
+  ended: { label: "ENDED", color: "#8E8E9366", icon: "stop.fill" }
 };
 var ORDER = Object.keys(SECTIONS);
 var epoch = () => data.clock()?.epoch ?? 0;
@@ -155,6 +155,7 @@ var searchField = (placeholder, onEdit) => HStack([
   ]).paddingHorizontal(9).paddingVertical(6).background("#7f7f7f24").cornerRadius(8).frame({ maxWidth: "infinity" })
 ]);
 var sectionHeader = (section, count, folded, onTap) => HStack({ spacing: 6 }, [
+  Image(SECTIONS[section].icon).font(9).color(SECTIONS[section].color),
   Text(SECTIONS[section].label).font(10).weight("bold").color(SECTIONS[section].color),
   Text(() => String(count())).font(10).monospaced().color("tertiary"),
   Spacer(),
