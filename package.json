@@ -5,7 +5,8 @@
   "exports": {
     "./model": "./src/model.ts",
     "./components": "./src/components.ts",
-    "./manager": "./src/manager.ts"
+    "./manager": "./src/manager.ts",
+    "./sections": "./src/sections.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json && bun scripts/build.ts",

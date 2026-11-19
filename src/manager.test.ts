@@ -108,6 +108,24 @@ const mount = (data: typeof fixture, script = MANAGER) => {
   return { visibleTexts, tap, type, images };
 };
 
+// The example host's two sections as they first draw: the queue with its first card expanded, then the folded note.
+const HOSTED = [
+  "QUEUE",
+  "2",
+  "Draft the release notes",
+  "~10m",
+  "Docs",
+  "Start",
+  "Find the flaky checkout test",
+  "~20m",
+  "Checkout",
+  "NOTES",
+  "1",
+];
+const withoutHosted = (texts: string[]) => {
+  const at = texts.indexOf("QUEUE");
+  return at < 0 ? texts : [...texts.slice(0, at), ...texts.slice(at + HOSTED.length)];
+};
 const HEADERS = ["NEEDS YOU", "RUNNING", "RECENT", "IDLE", "ENDED"];
 const titles = fixture.workspaces.flatMap((workspace) => workspace.tabs.map((tab) => tab.title));
 const subagents = fixture.workspaces.flatMap((workspace) =>
@@ -191,22 +209,75 @@ test("the manager draws its own title, and a host's header in its place", () => 
   const host = mount(fixture, HOST);
   host.tap("Agents");
   const texts = host.visibleTexts();
-  expect(texts.slice(0, 2), "the host's tabs lead the manager's header row").toEqual(["Today", "Agents"]);
+  expect(texts.slice(0, 4), "the host's tabs lead the header row, then its sections' tallies").toEqual(["Today", "Agents", "2", "1"]);
   expect(texts).not.toContain("Manager");
   expect(
-    texts.slice(2).filter((text) => text !== "Reload"),
-    "everything after the host's header and button is the manager's own",
+    withoutHosted(texts.slice(4)).filter((text) => text !== "Reload"),
+    "everything after the host's header, button and sections is the manager's own",
   ).toEqual(own.slice(1));
 });
 
 test("a host's trailing view ends the header row, after the tallies", () => {
   const host = mount(fixture, HOST);
   host.tap("Agents");
-  expect(host.visibleTexts().indexOf("Reload"), "the reload button follows the four tallies").toBe(6);
+  expect(host.visibleTexts().indexOf("Reload"), "the reload button follows the host's two tallies and the manager's four").toBe(8);
   expect(host.tap("Reload")).toMatchObject({ method: "sidebar.custom.reload", params: { name: "host" } });
 });
 
 test("every section header leads with its icon", () => {
   const { images } = mount(fixture);
   expect(images()).toEqual(expect.arrayContaining(["hand.raised.fill", "play.fill", "clock.fill", "moon.zzz.fill", "stop.fill"]));
+});
+
+test("a host's sections sit above Needs you in order, with their own icons, counts and fold state", () => {
+  const host = mount(fixture, HOST);
+  host.tap("Agents");
+  const texts = host.visibleTexts();
+  const at = texts.indexOf("QUEUE");
+  expect(texts.slice(at, at + HOSTED.length), "the queue open with its first card expanded, the note folded").toEqual(HOSTED);
+  expect(texts.indexOf("All"), "under the search and group chips").toBeLessThan(at);
+  expect(texts[at + HOSTED.length], "the manager's first section follows").toBe("NEEDS YOU");
+  expect(host.images()).toEqual(expect.arrayContaining(["tray.full.fill", "note.text"]));
+  host.tap("NOTES");
+  expect(host.visibleTexts(), "a content section shows its own view once opened").toContain("Ship the beta on Friday");
+});
+
+test("when an expanded card leaves, the next one opens", () => {
+  const host = mount(fixture, HOST);
+  host.tap("Agents");
+  host.tap("Start");
+  const texts = host.visibleTexts();
+  expect(texts).not.toContain("Draft the release notes");
+  expect(texts.slice(texts.indexOf("QUEUE"), texts.indexOf("QUEUE") + 6)).toEqual([
+    "QUEUE",
+    "1",
+    "Find the flaky checkout test",
+    "~20m",
+    "Checkout",
+    "Start",
+  ]);
+});
+
+test("a card opens and closes on its own tap, and its header folds the section", () => {
+  const host = mount(fixture, HOST);
+  host.tap("Agents");
+  host.tap("Find the flaky checkout test");
+  const texts = host.visibleTexts();
+  expect(texts.indexOf("Start"), "only the picked card is expanded").toBeGreaterThan(texts.indexOf("Find the flaky checkout test"));
+  host.tap("Find the flaky checkout test");
+  expect(host.visibleTexts()).not.toContain("Start");
+  host.tap("QUEUE");
+  expect(host.visibleTexts()).not.toContain("Draft the release notes");
+});
+
+test("the search narrows a section's cards too, and a section with none left hides", () => {
+  const host = mount(fixture, HOST);
+  host.tap("Agents");
+  host.type("flaky");
+  expect(host.visibleTexts()).toContain("Find the flaky checkout test");
+  expect(host.visibleTexts()).not.toContain("Draft the release notes");
+  expect(host.visibleTexts(), "a matching card is a match").not.toContain("No matches.");
+  host.type("garden");
+  expect(host.visibleTexts()).not.toContain("QUEUE");
+  expect(host.visibleTexts(), "a content section keeps its own count").toContain("NOTES");
 });

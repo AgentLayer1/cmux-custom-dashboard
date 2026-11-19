@@ -1,9 +1,9 @@
-import { type Card, epoch, fmtSpan, jump, type Section, SECTIONS } from "./model.ts";
+import { type Card, epoch, fmtSpan, jump, type Section, type SectionLook, SECTIONS } from "./model.ts";
 
 const YOUR_MOVE = "#FFD60A";
 const MAIN_BRANCH = /^(main|master)$/;
 
-interface Badge {
+export interface Badge {
   key: string;
   text: string;
   icon: string;
@@ -67,7 +67,7 @@ const badgesOf = (card: Card): Badge[] =>
     },
   ].filter((item) => typeof item === "object");
 
-const badge = (item: () => Badge) =>
+export const badge = (item: () => Badge) =>
   HStack({ spacing: 3 }, [
     Image(() => item().icon)
       .font(8)
@@ -113,10 +113,19 @@ export const searchField = (placeholder: string, onEdit: (text: string) => void)
       .frame({ maxWidth: "infinity" }),
   ]);
 
-export const sectionHeader = (section: Section, count: () => number, folded: () => boolean, onTap: () => void) =>
-  HStack({ spacing: 6 }, [
-    Image(SECTIONS[section].icon).font(9).color(SECTIONS[section].color),
-    Text(SECTIONS[section].label).font(10).weight("bold").color(SECTIONS[section].color),
+const lookOf = (section: Section | SectionLook): SectionLook =>
+  typeof section === "string" ? SECTIONS[section] : section;
+
+export const sectionHeader = (
+  section: Section | SectionLook,
+  count: () => number,
+  folded: () => boolean,
+  onTap: () => void,
+) => {
+  const { label, color, icon } = lookOf(section);
+  return HStack({ spacing: 6 }, [
+    Image(icon).font(9).color(color),
+    Text(label).font(10).weight("bold").color(color),
     Text(() => String(count()))
       .font(10)
       .monospaced()
@@ -133,6 +142,7 @@ export const sectionHeader = (section: Section, count: () => number, folded: () 
     .frame({ maxWidth: "infinity" })
     .cursor("pointer")
     .onTap(onTap);
+};
 
 /**
  * One session as a card; a tap focuses its tab.
@@ -201,9 +211,9 @@ export const subagentRow = (row: () => Subagent) => {
     .onTap(() => jump(row().workspaceId, row().focusId));
 };
 
-export const tally = (section: Section, count: () => number) =>
+export const tally = (section: Section | SectionLook, count: () => number) =>
   HStack({ spacing: 3 }, [
-    Circle({ size: 5 }).fill(SECTIONS[section].color),
+    Circle({ size: 5 }).fill(lookOf(section).color),
     Text(() => String(count()))
       .font(10)
       .weight("semibold")

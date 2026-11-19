@@ -1,5 +1,5 @@
 /*
- * cmux Manager · v0.3.0 (1)
+ * cmux Manager · v0.4.0 (1)
  * Every coding agent in cmux, sorted by what needs you.
  *
  *   NEEDS YOU   waiting on input, or a finished turn you haven't looked at
@@ -154,13 +154,17 @@ var searchField = (placeholder, onEdit) => HStack([
     TextField("", { placeholder, autofocus: false, onEdit: (text) => onEdit(text ?? "") })
   ]).paddingHorizontal(9).paddingVertical(6).background("#7f7f7f24").cornerRadius(8).frame({ maxWidth: "infinity" })
 ]);
-var sectionHeader = (section, count, folded, onTap) => HStack({ spacing: 6 }, [
-  Image(SECTIONS[section].icon).font(9).color(SECTIONS[section].color),
-  Text(SECTIONS[section].label).font(10).weight("bold").color(SECTIONS[section].color),
-  Text(() => String(count())).font(10).monospaced().color("tertiary"),
-  Spacer(),
-  Image(() => folded() ? "chevron.right" : "chevron.down").font(9).weight("semibold").color("tertiary")
-]).paddingHorizontal(10).paddingTop(10).paddingBottom(2).frame({ maxWidth: "infinity" }).cursor("pointer").onTap(onTap);
+var lookOf = (section) => typeof section === "string" ? SECTIONS[section] : section;
+var sectionHeader = (section, count, folded, onTap) => {
+  const { label, color, icon } = lookOf(section);
+  return HStack({ spacing: 6 }, [
+    Image(icon).font(9).color(color),
+    Text(label).font(10).weight("bold").color(color),
+    Text(() => String(count())).font(10).monospaced().color("tertiary"),
+    Spacer(),
+    Image(() => folded() ? "chevron.right" : "chevron.down").font(9).weight("semibold").color("tertiary")
+  ]).paddingHorizontal(10).paddingTop(10).paddingBottom(2).frame({ maxWidth: "infinity" }).cursor("pointer").onTap(onTap);
+};
 var cardRow = (card) => VStack({ spacing: 4 }, [
   HStack({ spacing: 7 }, [
     Circle({ size: 7 }).fill(() => dotColor(card())),
@@ -182,12 +186,76 @@ var subagentRow = (row) => {
   ]).paddingLeading(26).paddingTrailing(10).paddingVertical(2).cornerRadius(6).hoverBackground("#7f7f7f1c").frame({ maxWidth: "infinity" }).onTap(() => jump(row().workspaceId, row().focusId));
 };
 var tally = (section, count) => HStack({ spacing: 3 }, [
-  Circle({ size: 5 }).fill(SECTIONS[section].color),
+  Circle({ size: 5 }).fill(lookOf(section).color),
   Text(() => String(count())).font(10).weight("semibold").monospaced().color(() => count() ? "secondary" : "quaternary")
 ]).fixedSize();
 
+// src/sections.ts
+var when = (show, build) => ForEach({ items: () => show() ? ["shown"] : [], key: (name) => name }, build);
+var tokensOf = (query) => query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+var matches = (card, tokens) => {
+  const haystack = [card.title, card.searchText ?? "", ...(card.badges ?? []).map(({ text }) => text)].join(" ").toLowerCase();
+  return tokens.every((token) => haystack.includes(token));
+};
+var sectionCard = (card, color, expanded, onToggle) => VStack({ spacing: 4, alignment: "leading" }, [
+  VStack({ spacing: 4, alignment: "leading" }, [
+    HStack({ spacing: 7 }, [
+      Circle({ size: 7 }).fill(color),
+      Text(() => card().title).font(13).weight("semibold").lineLimit(1).truncation("tail"),
+      Spacer({ minLength: 4 }),
+      Text(() => card().span ?? "").font(10).monospaced().color("tertiary").fixedSize()
+    ]),
+    HStack({ spacing: 4 }, [
+      ForEach({
+        items: () => (card().badges ?? []).map(({ text, color: tint, icon }, index) => ({
+          key: `${index}:${text}`,
+          text,
+          icon: icon ?? "circle.fill",
+          fg: tint,
+          bg: `${tint}26`,
+          flexible: false
+        })),
+        key: (entry) => entry.key
+      }, badge)
+    ]).paddingLeading(14).frame({ maxWidth: "infinity", alignment: "leading" })
+  ]).frame({ maxWidth: "infinity", alignment: "leading" }).cursor("pointer").onTap(onToggle),
+  when(() => expanded() && Boolean(card().body), () => (card().body?.() ?? VStack([])).paddingLeading(14).paddingTop(2))
+]).paddingHorizontal(10).paddingVertical(8).cornerRadius(10).background(() => expanded() ? `${color}1f` : "#7f7f7f0d").frame({ maxWidth: "infinity", alignment: "leading" });
+var CLOSED = "";
+var cardList = (section, query) => {
+  const shown = computed(() => {
+    const tokens = tokensOf(query());
+    return section.cards().filter((card) => matches(card, tokens));
+  });
+  const [picked, setPicked] = signal(null);
+  const openKey = computed(() => {
+    const list = shown();
+    const choice = picked();
+    if (choice !== null && list.some((card) => card.key === choice)) {
+      return choice;
+    }
+    if (choice === CLOSED || section.expandFirst === false) {
+      return CLOSED;
+    }
+    return list[0]?.key ?? CLOSED;
+  });
+  const view = () => VStack({ spacing: 4 }, [
+    ForEach({ items: shown, key: (card) => card.key }, (card) => sectionCard(card, section.color, () => openKey() === card().key, () => setPicked(openKey() === card().key ? CLOSED : card().key)))
+  ]);
+  return { shown, count: section.count ?? (() => shown().length), view };
+};
+var hostSection = (section, query) => {
+  const [folded, setFolded] = signal(section.folded ?? false);
+  const { shown, count, view: body } = "content" in section ? { shown: () => [], count: section.count, view: section.content } : cardList(section, query);
+  const view = when(() => count() > 0, () => VStack({ spacing: 4 }, [
+    sectionHeader(section, count, folded, () => setFolded(!folded())),
+    when(() => !folded(), body)
+  ]));
+  return { look: section, count, cards: shown, view };
+};
+
 // src/manager.ts
-var manager = ({ header, trailing } = {}) => {
+var manager = ({ header, trailing, sections: hosted = [] } = {}) => {
   const [query, setQuery] = signal("");
   const [groupFilter, setGroupFilter] = signal("");
   const [collapsed, setCollapsed] = signal(["ended"]);
@@ -205,6 +273,8 @@ var manager = ({ header, trailing } = {}) => {
     });
   });
   const sections = computed(() => bySection(cards()));
+  const added = hosted.map((section) => hostSection(section, query));
+  const cardsShown = () => added.some(({ cards }) => cards().length > 0);
   const entries = computed(() => ORDER.flatMap((section) => {
     const list = sections()[section];
     if (list.length === 0) {
@@ -248,7 +318,10 @@ var manager = ({ header, trailing } = {}) => {
         Text("Manager").font(13).weight("semibold")
       ]).fixedSize(),
       Spacer({ minLength: 0 }),
-      HStack({ spacing: 7 }, ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length))).fixedSize(),
+      HStack({ spacing: 7 }, [
+        ...added.map(({ look, count }) => tally(look, count)),
+        ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length))
+      ]).fixedSize(),
       ...trailing ? [trailing] : []
     ]),
     ForEach({ items: () => groupChips().length ? ["chips"] : [], key: (item) => item }, () => HStack({ spacing: 4 }, [
@@ -257,8 +330,17 @@ var manager = ({ header, trailing } = {}) => {
       Spacer()
     ])),
     searchField("Search sessions…", setQuery),
+    ...added.map(({ view }) => view),
     VStack({ spacing: 4 }, [ForEach({ items: entries, key: (entry) => entry.key }, row)]),
-    Text(() => entries().length === 0 ? query().trim() || effectiveGroupFilter() ? "No matches." : "No agents running in cmux." : "").font(11).color("tertiary").paddingHorizontal(10),
+    Text(() => {
+      if (entries().length > 0) {
+        return "";
+      }
+      if (query().trim() || effectiveGroupFilter()) {
+        return cardsShown() ? "" : "No matches.";
+      }
+      return "No agents running in cmux.";
+    }).font(11).color("tertiary").paddingHorizontal(10),
     Spacer()
   ]).paddingHorizontal(6);
 };

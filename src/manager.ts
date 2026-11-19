@@ -1,5 +1,6 @@
 import { cardRow, chip, searchField, sectionHeader, type Subagent, subagentRow, tally } from "./components.ts";
 import { agentCards, bySection, type Card, ORDER, type Section } from "./model.ts";
+import { type HostSection, hostSection } from "./sections.ts";
 
 interface HeaderEntry {
   key: string;
@@ -28,12 +29,17 @@ export interface ManagerOptions {
    * Drawn at the right end of the header row, after the tallies: where a host puts a button of its own.
    */
   trailing?: View;
+  /**
+   * Sections of the host's own, drawn above Needs you in this order and tallied first in the header row: sessions
+   * waiting to start, say.
+   */
+  sections?: HostSection[];
 }
 
 /**
  * The whole Manager panel. Each call owns its search, group filter and folded sections.
  */
-export const manager = ({ header, trailing }: ManagerOptions = {}) => {
+export const manager = ({ header, trailing, sections: hosted = [] }: ManagerOptions = {}) => {
   const [query, setQuery] = signal("");
   const [groupFilter, setGroupFilter] = signal("");
   const [collapsed, setCollapsed] = signal<Section[]>(["ended"]);
@@ -63,6 +69,8 @@ export const manager = ({ header, trailing }: ManagerOptions = {}) => {
   });
 
   const sections = computed(() => bySection(cards()));
+  const added = hosted.map((section) => hostSection(section, query));
+  const cardsShown = () => added.some(({ cards }) => cards().length > 0);
 
   const entries = computed((): Entry[] =>
     ORDER.flatMap((section): Entry[] => {
@@ -123,7 +131,10 @@ export const manager = ({ header, trailing }: ManagerOptions = {}) => {
       Spacer({ minLength: 0 }),
       HStack(
         { spacing: 7 },
-        ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length)),
+        [
+          ...added.map(({ look, count }) => tally(look, count)),
+          ...ORDER.filter((section) => section !== "ended").map((section) => tally(section, () => sections()[section].length)),
+        ],
       ).fixedSize(),
       ...(trailing ? [trailing] : []),
     ]),
@@ -144,9 +155,19 @@ export const manager = ({ header, trailing }: ManagerOptions = {}) => {
 
     searchField("Search sessions…", setQuery),
 
+    ...added.map(({ view }) => view),
+
     VStack({ spacing: 4 }, [ForEach({ items: entries, key: (entry) => entry.key }, row)]),
 
-    Text(() => (entries().length === 0 ? (query().trim() || effectiveGroupFilter() ? "No matches." : "No agents running in cmux.") : ""))
+    Text(() => {
+      if (entries().length > 0) {
+        return "";
+      }
+      if (query().trim() || effectiveGroupFilter()) {
+        return cardsShown() ? "" : "No matches.";
+      }
+      return "No agents running in cmux.";
+    })
       .font(11)
       .color("tertiary")
       .paddingHorizontal(10),

@@ -123,10 +123,24 @@ Take whichever level you need:
 | Import | Gives you |
 |---|---|
 | `cmux-custom-manager/model` | `agentCards` (every session as a card, placed in its section), `bySection`, `jump` to focus a session, and cmux's types |
-| `cmux-custom-manager/components` | `cardRow`, `subagentRow`, `sectionHeader`, `tally`, `chip`, `searchField` |
-| `cmux-custom-manager/manager` | `manager()`, the whole panel, with its own search and filters each time it's mounted. `manager({ header })` draws your view (your tabs, say) in place of its icon and title, beside the tallies, and `trailing` ends the row after them (a reload button, say) |
+| `cmux-custom-manager/components` | `cardRow`, `subagentRow`, `sectionHeader` and `tally` (for a manager section by name, or a look of your own: label, colour, icon), `chip`, `searchField`, `badge` |
+| `cmux-custom-manager/manager` | `manager()`, the whole panel, with its own search and filters each time it's mounted. `manager({ header })` draws your view (your tabs, say) in place of its icon and title, beside the tallies, `trailing` ends the row after them (a reload button, say), and `sections` adds sections of your own above Needs you |
+| `cmux-custom-manager/sections` | The types for `sections`: `HostSection` and `SectionCard` |
 
-[`examples/host.ts`](./examples/host.ts) puts all three to work: a two-page sidebar whose Today page draws a "Needs you" strip from the model and the card component, and whose Agents page is the whole manager, with the host's page tabs in its header row.
+[`examples/host.ts`](./examples/host.ts) puts all three to work: a two-page sidebar whose Today page draws a "Needs you" strip from the model and the card component, and whose Agents page is the whole manager, with the host's page tabs in its header row and two sections of its own above Needs you.
+
+Each of your `sections` is drawn like the manager's own, in the order you list them: an icon, a label and a count, folding from its header, tallied in the header row before the manager's sections, and hidden while its count is 0. A section holds cards the manager draws, or your own view:
+
+```ts
+manager({
+  sections: [
+    { label: "QUEUE", icon: "tray.full.fill", color: "#BF5AF2", cards },             // cards, the first one expanded
+    { label: "NOTES", icon: "note.text", color: "#8E8E93", folded: true, count, content }, // your own view
+  ],
+});
+```
+
+`cards` returns `SectionCard`s, drawn like session cards: a dot, the title and a `span` (an estimate, say), the `badges` under it, and the `body` you give it while the card is expanded (your buttons go there). One card is expanded at a time; when it leaves the list, the next one opens, unless `expandFirst: false` starts every card closed. The search box matches a card's title, badges and `searchText`, and the count follows the cards shown unless you pass your own. `folded: true` starts any section folded.
 
 ---
 
