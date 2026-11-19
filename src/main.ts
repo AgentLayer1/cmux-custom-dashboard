@@ -1,5 +1,5 @@
 /*
- * cmux Manager · v0.4.0 (1)
+ * cmux Manager · v0.4.1 (1)
  * Every coding agent in cmux, sorted by what needs you.
  *
  *   NEEDS YOU   waiting on input, or a finished turn you haven't looked at

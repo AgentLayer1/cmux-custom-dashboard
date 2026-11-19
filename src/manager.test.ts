@@ -149,6 +149,14 @@ const FULL_OUTLINE = [
   "Frost date lookup",
   "ENDED",
 ];
+// The example host leaves out the only Idle session, so its manager draws the rest.
+const EXCLUDED = "Frost date lookup";
+const HOST_OUTLINE = FULL_OUTLINE.filter((text) => text !== "IDLE" && text !== EXCLUDED);
+const withoutExcluded = structuredClone(fixture);
+withoutExcluded.workspaces.forEach((workspace) => {
+  const panels = new Set(workspace.tabs.filter((tab) => tab.title === EXCLUDED).map((tab) => tab.id));
+  workspace.agents = workspace.agents?.filter((agent) => !panels.has(agent.panelId ?? ""));
+});
 
 test("dist/manager.js is built from the current source", async () => {
   expect(await bundle("src/main.ts"), "dist is stale: run `bun run build`").toBe(MANAGER);
@@ -194,17 +202,17 @@ test("a host sidebar draws its own Needs-you strip from the model, with cards th
 test("a host sidebar mounts the whole manager as a page, and again after leaving it", () => {
   const { visibleTexts, tap, type } = mount(fixture, HOST);
   tap("Agents");
-  expect(outline(visibleTexts())).toEqual(FULL_OUTLINE);
+  expect(outline(visibleTexts())).toEqual(HOST_OUTLINE);
   type("garden");
-  expect(outline(visibleTexts())).toEqual(["IDLE", "Frost date lookup", "ENDED"]);
+  expect(outline(visibleTexts())).toEqual(["ENDED"]);
   tap("Today");
   expect(outline(visibleTexts())).toEqual(["Partial refunds design", "Dark mode audit"]);
   tap("Agents");
-  expect(outline(visibleTexts()), "a remounted manager starts with an empty search").toEqual(FULL_OUTLINE);
+  expect(outline(visibleTexts()), "a remounted manager starts with an empty search").toEqual(HOST_OUTLINE);
 });
 
 test("the manager draws its own title, and a host's header in its place", () => {
-  const own = mount(fixture).visibleTexts();
+  const own = mount(withoutExcluded).visibleTexts();
   expect(own[0]).toBe("Manager");
   const host = mount(fixture, HOST);
   host.tap("Agents");
@@ -213,7 +221,7 @@ test("the manager draws its own title, and a host's header in its place", () => 
   expect(texts).not.toContain("Manager");
   expect(
     withoutHosted(texts.slice(4)).filter((text) => text !== "Reload"),
-    "everything after the host's header, button and sections is the manager's own",
+    "everything after the host's header, button and sections is the manager's own, for the sessions the host keeps",
   ).toEqual(own.slice(1));
 });
 
@@ -280,4 +288,18 @@ test("the search narrows a section's cards too, and a section with none left hid
   host.type("garden");
   expect(host.visibleTexts()).not.toContain("QUEUE");
   expect(host.visibleTexts(), "a content section keeps its own count").toContain("NOTES");
+});
+
+test("a host's exclude leaves a session out of every section, tally and search", () => {
+  const own = mount(fixture);
+  expect(own.visibleTexts(), "the plain manager still shows it").toContain(EXCLUDED);
+  expect(own.visibleTexts()[4], "and tallies it under Idle").toBe("1");
+  const host = mount(fixture, HOST);
+  host.tap("Agents");
+  const texts = host.visibleTexts();
+  expect(texts).not.toContain(EXCLUDED);
+  expect(texts).not.toContain("IDLE");
+  expect(texts[7], "the Idle tally drops by one").toBe("0");
+  host.type("frost");
+  expect(host.visibleTexts(), "a search that only it matched finds nothing").toContain("No matches.");
 });

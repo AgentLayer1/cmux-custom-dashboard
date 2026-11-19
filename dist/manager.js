@@ -1,5 +1,5 @@
 /*
- * cmux Manager · v0.4.0 (1)
+ * cmux Manager · v0.4.1 (1)
  * Every coding agent in cmux, sorted by what needs you.
  *
  *   NEEDS YOU   waiting on input, or a finished turn you haven't looked at
@@ -255,19 +255,20 @@ var hostSection = (section, query) => {
 };
 
 // src/manager.ts
-var manager = ({ header, trailing, sections: hosted = [] } = {}) => {
+var manager = ({ header, trailing, sections: hosted = [], exclude } = {}) => {
   const [query, setQuery] = signal("");
   const [groupFilter, setGroupFilter] = signal("");
   const [collapsed, setCollapsed] = signal(["ended"]);
   const toggleSection = (section) => setCollapsed(collapsed().includes(section) ? collapsed().filter((name) => name !== section) : [...collapsed(), section]);
+  const kept = computed(() => exclude ? agentCards().filter((card) => !exclude(card)) : agentCards());
   const groupChips = computed(() => {
-    const withAgents = new Set(agentCards().map((card) => card.groupId));
+    const withAgents = new Set(kept().map((card) => card.groupId));
     return (data.groups() ?? []).filter((group) => withAgents.has(group.id));
   });
   const effectiveGroupFilter = computed(() => groupChips().some((group) => group.id === groupFilter()) ? groupFilter() : "");
   const cards = computed(() => {
     const tokens = query().trim().toLowerCase().split(/\s+/).filter(Boolean);
-    return agentCards().filter((card) => !effectiveGroupFilter() || card.groupId === effectiveGroupFilter()).filter((card) => {
+    return kept().filter((card) => !effectiveGroupFilter() || card.groupId === effectiveGroupFilter()).filter((card) => {
       const haystack = [card.title, card.searchText, card.workspaceTitle, card.group, card.folder, card.branch].join(" ").toLowerCase();
       return tokens.every((token) => haystack.includes(token));
     });

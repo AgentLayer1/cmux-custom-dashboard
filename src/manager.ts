@@ -34,12 +34,16 @@ export interface ManagerOptions {
    * waiting to start, say.
    */
   sections?: HostSection[];
+  /**
+   * Sessions it returns true for are left out of the manager: its sections, tallies, search and group chips.
+   */
+  exclude?: (card: Card) => boolean;
 }
 
 /**
  * The whole Manager panel. Each call owns its search, group filter and folded sections.
  */
-export const manager = ({ header, trailing, sections: hosted = [] }: ManagerOptions = {}) => {
+export const manager = ({ header, trailing, sections: hosted = [], exclude }: ManagerOptions = {}) => {
   const [query, setQuery] = signal("");
   const [groupFilter, setGroupFilter] = signal("");
   const [collapsed, setCollapsed] = signal<Section[]>(["ended"]);
@@ -47,9 +51,11 @@ export const manager = ({ header, trailing, sections: hosted = [] }: ManagerOpti
   const toggleSection = (section: Section) =>
     setCollapsed(collapsed().includes(section) ? collapsed().filter((name) => name !== section) : [...collapsed(), section]);
 
+  const kept = computed(() => (exclude ? agentCards().filter((card) => !exclude(card)) : agentCards()));
+
   // cmux's right-sidebar host passes no groups (still true in 0.65.2), so there the chip row disappears.
   const groupChips = computed(() => {
-    const withAgents = new Set(agentCards().map((card) => card.groupId));
+    const withAgents = new Set(kept().map((card) => card.groupId));
     return (data.groups() ?? []).filter((group) => withAgents.has(group.id));
   });
   const effectiveGroupFilter = computed(() =>
@@ -58,7 +64,7 @@ export const manager = ({ header, trailing, sections: hosted = [] }: ManagerOpti
 
   const cards = computed(() => {
     const tokens = query().trim().toLowerCase().split(/\s+/).filter(Boolean);
-    return agentCards()
+    return kept()
       .filter((card) => !effectiveGroupFilter() || card.groupId === effectiveGroupFilter())
       .filter((card) => {
         const haystack = [card.title, card.searchText, card.workspaceTitle, card.group, card.folder, card.branch]

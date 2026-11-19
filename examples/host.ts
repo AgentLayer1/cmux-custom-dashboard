@@ -3,7 +3,7 @@
  *
  *   Today    a "Needs you" strip: the model (agentCards, bySection) drawn with a component (cardRow)
  *   Agents   the whole manager, mounted as a page, with the host's tabs in its header row, a reload button at its end,
- *            and two sections of its own above Needs you: a queue of cards, and a folded note
+ *            two sections of its own above Needs you (a queue of cards, and a folded note), and one session left out
  */
 
 import { cardRow, chip } from "cmux-custom-manager/components";
@@ -80,6 +80,7 @@ sidebar(() =>
       manager({
         header: tabs(),
         sections: SECTIONS,
+        exclude: (card) => card.title === "Frost date lookup",
         trailing: Text("Reload")
           .font(11)
           .color("secondary")

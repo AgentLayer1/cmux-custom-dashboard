@@ -124,7 +124,7 @@ Take whichever level you need:
 |---|---|
 | `cmux-custom-manager/model` | `agentCards` (every session as a card, placed in its section), `bySection`, `jump` to focus a session, and cmux's types |
 | `cmux-custom-manager/components` | `cardRow`, `subagentRow`, `sectionHeader` and `tally` (for a manager section by name, or a look of your own: label, colour, icon), `chip`, `searchField`, `badge` |
-| `cmux-custom-manager/manager` | `manager()`, the whole panel, with its own search and filters each time it's mounted. `manager({ header })` draws your view (your tabs, say) in place of its icon and title, beside the tallies, `trailing` ends the row after them (a reload button, say), and `sections` adds sections of your own above Needs you |
+| `cmux-custom-manager/manager` | `manager()`, the whole panel, with its own search and filters each time it's mounted. `manager({ header })` draws your view (your tabs, say) in place of its icon and title, beside the tallies, `trailing` ends the row after them (a reload button, say), `sections` adds sections of your own above Needs you, and `exclude` leaves out the sessions it returns true for (ones your sidebar shows elsewhere, say) |
 | `cmux-custom-manager/sections` | The types for `sections`: `HostSection` and `SectionCard` |
 
 [`examples/host.ts`](./examples/host.ts) puts all three to work: a two-page sidebar whose Today page draws a "Needs you" strip from the model and the card component, and whose Agents page is the whole manager, with the host's page tabs in its header row and two sections of its own above Needs you.
