@@ -41,9 +41,9 @@ interface SectionHead {
   icon: string;
   color: string;
   /**
-   * Whether the section starts folded. It starts open.
+   * Whether the section is folded: a value, or a getter the fold follows until the header is tapped. It starts open.
    */
-  folded?: boolean;
+  folded?: boolean | (() => boolean);
 }
 
 interface SectionCards {
@@ -176,14 +176,16 @@ const cardList = (section: SectionHead & SectionCards, query: () => string) => {
  * in it, and its view.
  */
 export const hostSection = (section: HostSection, query: () => string) => {
-  const [folded, setFolded] = signal(section.folded ?? false);
+  const [tapped, setTapped] = signal<boolean | null>(null);
+  const given = section.folded;
+  const folded = () => tapped() ?? (typeof given === "function" ? given() : (given ?? false));
   const { shown, count, view: body } =
     "content" in section ? { shown: () => [], count: section.count, view: section.content } : cardList(section, query);
   const view = when(
     () => count() > 0,
     () =>
       VStack({ spacing: 4 }, [
-        sectionHeader(section, count, folded, () => setFolded(!folded())),
+        sectionHeader(section, count, folded, () => setTapped(!folded())),
         when(() => !folded(), body),
       ]),
   );

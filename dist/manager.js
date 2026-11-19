@@ -245,10 +245,12 @@ var cardList = (section, query) => {
   return { shown, count: section.count ?? (() => shown().length), view };
 };
 var hostSection = (section, query) => {
-  const [folded, setFolded] = signal(section.folded ?? false);
+  const [tapped, setTapped] = signal(null);
+  const given = section.folded;
+  const folded = () => tapped() ?? (typeof given === "function" ? given() : given ?? false);
   const { shown, count, view: body } = "content" in section ? { shown: () => [], count: section.count, view: section.content } : cardList(section, query);
   const view = when(() => count() > 0, () => VStack({ spacing: 4 }, [
-    sectionHeader(section, count, folded, () => setFolded(!folded())),
+    sectionHeader(section, count, folded, () => setTapped(!folded())),
     when(() => !folded(), body)
   ]));
   return { look: section, count, cards: shown, view };

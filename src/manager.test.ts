@@ -105,7 +105,7 @@ const mount = (data: typeof fixture, script = MANAGER) => {
       .filter((node) => node?.type === "image")
       .map((node) => String(node?.props.systemName ?? ""))
       .filter(Boolean);
-  return { visibleTexts, tap, type, images };
+  return { visibleTexts, tap, type, images, setData };
 };
 
 // The example host's two sections as they first draw: the queue with its first card expanded, then the folded note.
@@ -248,6 +248,18 @@ test("a host's sections sit above Needs you in order, with their own icons, coun
   expect(host.images()).toEqual(expect.arrayContaining(["tray.full.fill", "note.text"]));
   host.tap("NOTES");
   expect(host.visibleTexts(), "a content section shows its own view once opened").toContain("Ship the beta on Friday");
+});
+
+test("a section's fold follows its getter as data arrives, until its header is tapped", () => {
+  const host = mount({ ...fixture, workspaces: [] }, HOST);
+  host.tap("Agents");
+  expect(host.visibleTexts(), "nothing needs you yet, so the note is open").toContain("Ship the beta on Friday");
+  host.setData("workspaces", fixture.workspaces);
+  expect(host.visibleTexts(), "a session needs you, so it folds").not.toContain("Ship the beta on Friday");
+  host.tap("NOTES");
+  host.setData("workspaces", []);
+  host.setData("workspaces", fixture.workspaces);
+  expect(host.visibleTexts(), "a tap outlasts later data").toContain("Ship the beta on Friday");
 });
 
 test("when an expanded card leaves, the next one opens", () => {

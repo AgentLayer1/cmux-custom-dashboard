@@ -3,7 +3,8 @@
  *
  *   Today    a "Needs you" strip: the model (agentCards, bySection) drawn with a component (cardRow)
  *   Agents   the whole manager, mounted as a page, with the host's tabs in its header row, a reload button at its end,
- *            two sections of its own above Needs you (a queue of cards, and a folded note), and one session left out
+ *            two sections of its own above Needs you (a queue of cards, and a note folded while a session needs you),
+ *            and one session left out
  */
 
 import { cardRow, chip } from "cmux-custom-manager/components";
@@ -41,12 +42,12 @@ const queued = computed(() =>
 
 const SECTIONS: HostSection[] = [
   { label: "QUEUE", icon: "tray.full.fill", color: "#BF5AF2", cards: queued },
-  // Free-form content under a header, starting folded.
+  // Free-form content under a header, folded while a session needs you until its header is tapped.
   {
     label: "NOTES",
     icon: "note.text",
     color: "#8E8E93",
-    folded: true,
+    folded: () => needsYou().length > 0,
     count: () => 1,
     content: () => Text("Ship the beta on Friday").font(11).color("secondary").paddingHorizontal(10),
   },
