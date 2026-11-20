@@ -140,7 +140,7 @@ manager({
 });
 ```
 
-`cards` returns `SectionCard`s, drawn like session cards: a dot, the title and a `span` (an estimate, say), the `badges` under it, and the `body` you give it while the card is expanded (your buttons go there). One card is expanded at a time; when it leaves the list, the next one opens, unless `expandFirst: false` starts every card closed. The search box matches a card's title, badges and `searchText`, and the count follows the cards shown unless you pass your own. `folded: true` starts any section folded; a getter (`folded: () => busy()`) keeps the fold following your data, say as cmux's data arrives after the sidebar mounts, until the operator taps the header.
+`cards` returns `SectionCard`s, drawn like session cards: a dot, the title and a `span` (an estimate, say), the `badges` under it, a `summary` line while the card is closed, and the `body` you give it while the card is expanded (your buttons go there). One card is expanded at a time; when it leaves the list, the next one opens, unless `expandFirst: false` starts every card closed. The search box matches a card's title, badges and `searchText`, and the count follows the cards shown unless you pass your own. `folded: true` starts any section folded; a getter (`folded: () => busy()`) keeps the fold following your data, say as cmux's data arrives after the sidebar mounts, until the operator taps the header.
 
 ---
 

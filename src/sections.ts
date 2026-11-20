@@ -24,6 +24,10 @@ export interface SectionCard {
   span?: string;
   badges?: CardBadge[];
   /**
+   * A line under the badges while the card is closed, like a session card's summary.
+   */
+  summary?: string;
+  /**
    * More words the search box matches, beside the title and badges.
    */
   searchText?: string;
@@ -122,6 +126,16 @@ const sectionCard = (card: () => SectionCard, color: string, expanded: () => boo
       ])
         .paddingLeading(14)
         .frame({ maxWidth: "infinity", alignment: "leading" }),
+      when(
+        () => !expanded() && Boolean(card().summary),
+        () =>
+          Text(() => card().summary ?? "")
+            .font(11)
+            .color("tertiary")
+            .lineLimit(2)
+            .truncation("tail")
+            .paddingLeading(14),
+      ),
     ])
       .frame({ maxWidth: "infinity", alignment: "leading" })
       .cursor("pointer")

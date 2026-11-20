@@ -1,5 +1,5 @@
 /*
- * cmux Manager · v0.4.1 (1)
+ * cmux Manager · v0.4.5 (1)
  * Every coding agent in cmux, sorted by what needs you.
  *
  *   NEEDS YOU   waiting on input, or a finished turn you haven't looked at
@@ -217,7 +217,8 @@ var sectionCard = (card, color, expanded, onToggle) => VStack({ spacing: 4, alig
         })),
         key: (entry) => entry.key
       }, badge)
-    ]).paddingLeading(14).frame({ maxWidth: "infinity", alignment: "leading" })
+    ]).paddingLeading(14).frame({ maxWidth: "infinity", alignment: "leading" }),
+    when(() => !expanded() && Boolean(card().summary), () => Text(() => card().summary ?? "").font(11).color("tertiary").lineLimit(2).truncation("tail").paddingLeading(14))
   ]).frame({ maxWidth: "infinity", alignment: "leading" }).cursor("pointer").onTap(onToggle),
   when(() => expanded() && Boolean(card().body), () => (card().body?.() ?? VStack([])).paddingLeading(14).paddingTop(2))
 ]).paddingHorizontal(10).paddingVertical(8).cornerRadius(10).background(() => expanded() ? `${color}1f` : "#7f7f7f0d").frame({ maxWidth: "infinity", alignment: "leading" });

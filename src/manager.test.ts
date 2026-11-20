@@ -119,6 +119,7 @@ const HOSTED = [
   "Find the flaky checkout test",
   "~20m",
   "Checkout",
+  "It failed twice on main this week",
   "NOTES",
   "1",
 ];
@@ -276,6 +277,16 @@ test("when an expanded card leaves, the next one opens", () => {
     "Checkout",
     "Start",
   ]);
+});
+
+test("a closed card shows its summary, and opening it trades the summary for the body", () => {
+  const host = mount(fixture, HOST);
+  host.tap("Agents");
+  expect(host.visibleTexts(), "the expanded card shows its body instead").not.toContain("Three PRs merged since the last notes");
+  host.tap("Find the flaky checkout test");
+  const texts = host.visibleTexts();
+  expect(texts).toContain("Three PRs merged since the last notes");
+  expect(texts).not.toContain("It failed twice on main this week");
 });
 
 test("a card opens and closes on its own tap, and its header folds the section", () => {

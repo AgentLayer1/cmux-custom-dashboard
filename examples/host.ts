@@ -19,8 +19,20 @@ const needsYou = computed(() => bySection(agentCards()).needs);
 
 // Sessions the host would start, queued above Needs you. Starting one takes it off the queue and opens the next.
 const QUEUED: SectionCard[] = [
-  { key: "notes", title: "Draft the release notes", span: "~10m", badges: [{ text: "Docs", color: "#0A84FF" }] },
-  { key: "flaky", title: "Find the flaky checkout test", span: "~20m", badges: [{ text: "Checkout", color: "#FF453A" }] },
+  {
+    key: "notes",
+    title: "Draft the release notes",
+    span: "~10m",
+    badges: [{ text: "Docs", color: "#0A84FF" }],
+    summary: "Three PRs merged since the last notes",
+  },
+  {
+    key: "flaky",
+    title: "Find the flaky checkout test",
+    span: "~20m",
+    badges: [{ text: "Checkout", color: "#FF453A" }],
+    summary: "It failed twice on main this week",
+  },
 ];
 const [started, setStarted] = signal<string[]>([]);
 const queued = computed(() =>
