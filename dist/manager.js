@@ -101,9 +101,7 @@ var bySection = (cards) => Object.fromEntries(ORDER.map((section) => [section, c
 var jump = (workspaceId, focusId) => focusId ? cmux("surface.focus", { surface_id: focusId, workspace_id: workspaceId }) : cmux("workspace.select", { workspace_id: workspaceId });
 
 // src/components.ts
-var YOUR_MOVE = "#FFD60A";
 var MAIN_BRANCH = /^(main|master)$/;
-var dotColor = (card) => card.section === "needs" && card.agent.status !== "needs_input" ? YOUR_MOVE : SECTIONS[card.section].color;
 var timeText = (agent) => {
   const live = agent.status === "working" || agent.status === "needs_input";
   const start = live && agent.sinceEpoch || agent.lastActivityAt;
@@ -166,11 +164,11 @@ var sectionHeader = (section, count, folded, onTap) => {
   ]).paddingHorizontal(10).paddingTop(10).paddingBottom(2).frame({ maxWidth: "infinity" }).cursor("pointer").onTap(onTap);
 };
 var cardRow = (card) => VStack({ spacing: 4 }, [
-  HStack({ spacing: 7 }, [
-    Circle({ size: 7 }).fill(() => dotColor(card())),
-    Text(() => card().title).font(13).weight("semibold").color(() => card().section === "idle" || card().section === "ended" ? "secondary" : "primary").lineLimit(1).truncation("tail"),
+  HStack({ spacing: 8, alignment: "top" }, [
+    Circle({ size: 6 }).fill(() => SECTIONS[card().section].color).paddingTop(5),
+    Text(() => card().title).font(13).weight("semibold").color(() => card().section === "idle" || card().section === "ended" ? "secondary" : "primary").lineLimit(2).truncation("tail"),
     Spacer({ minLength: 4 }),
-    Text(() => timeText(card().agent)).font(10).monospaced().color("tertiary").fixedSize()
+    Text(() => timeText(card().agent)).font(10).monospaced().color("tertiary").fixedSize().paddingTop(2)
   ]),
   HStack({ spacing: 4 }, [ForEach({ items: () => badgesOf(card()), key: (item) => item.key }, badge)]).paddingLeading(14).frame({ maxWidth: "infinity" }),
   ForEach({ items: () => card().summary ? [card().summary] : [], key: () => "summary" }, (summary) => Text(() => summary()).font(11).color("tertiary").lineLimit(2).truncation("tail").paddingLeading(14))

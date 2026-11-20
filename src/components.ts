@@ -1,6 +1,5 @@
 import { type Card, epoch, fmtSpan, jump, type Section, type SectionLook, SECTIONS } from "./model.ts";
 
-const YOUR_MOVE = "#FFD60A";
 const MAIN_BRANCH = /^(main|master)$/;
 
 export interface Badge {
@@ -17,9 +16,6 @@ export interface Subagent {
   workspaceId: string;
   focusId: string;
 }
-
-const dotColor = (card: Card) =>
-  card.section === "needs" && card.agent.status !== "needs_input" ? YOUR_MOVE : SECTIONS[card.section].color;
 
 const timeText = (agent: Agent) => {
   const live = agent.status === "working" || agent.status === "needs_input";
@@ -149,20 +145,23 @@ export const sectionHeader = (
  */
 export const cardRow = (card: () => Card) =>
   VStack({ spacing: 4 }, [
-    HStack({ spacing: 7 }, [
-      Circle({ size: 7 }).fill(() => dotColor(card())),
+    HStack({ spacing: 8, alignment: "top" }, [
+      Circle({ size: 6 })
+        .fill(() => SECTIONS[card().section].color)
+        .paddingTop(5),
       Text(() => card().title)
         .font(13)
         .weight("semibold")
         .color(() => (card().section === "idle" || card().section === "ended" ? "secondary" : "primary"))
-        .lineLimit(1)
+        .lineLimit(2)
         .truncation("tail"),
       Spacer({ minLength: 4 }),
       Text(() => timeText(card().agent))
         .font(10)
         .monospaced()
         .color("tertiary")
-        .fixedSize(),
+        .fixedSize()
+        .paddingTop(2),
     ]),
     HStack({ spacing: 4 }, [ForEach({ items: () => badgesOf(card()), key: (item) => item.key }, badge)])
       .paddingLeading(14)
