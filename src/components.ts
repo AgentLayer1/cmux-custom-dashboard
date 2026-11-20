@@ -40,7 +40,7 @@ const badgesOf = (card: Card): Badge[] =>
     card.workspaceTitle && {
       key: "workspace",
       text: card.workspaceTitle,
-      icon: "circle.fill",
+      icon: "",
       fg: card.workspaceColor || "secondary",
       bg: card.workspaceColor ? `${card.workspaceColor}2e` : "#7f7f7f26",
       flexible: false,
@@ -63,11 +63,16 @@ const badgesOf = (card: Card): Badge[] =>
     },
   ].filter((item) => typeof item === "object");
 
+// A badge's icon is fixed for its key, so whether it has one is read once.
 export const badge = (item: () => Badge) =>
   HStack({ spacing: 3 }, [
-    Image(() => item().icon)
-      .font(8)
-      .color(() => item().fg),
+    ...(item().icon
+      ? [
+          Image(() => item().icon)
+            .font(8)
+            .color(() => item().fg),
+        ]
+      : []),
     Text(() => item().text)
       .font(10)
       .weight("medium")
@@ -119,8 +124,8 @@ export const sectionHeader = (
   onTap: () => void,
 ) => {
   const { label, color, icon } = lookOf(section);
-  return HStack({ spacing: 6 }, [
-    Image(icon).font(9).color(color),
+  return HStack({ spacing: 5 }, [
+    Image(icon).font(9).color(color).frame({ width: 12 }),
     Text(label).font(10).weight("bold").color(color),
     Text(() => String(count()))
       .font(10)
@@ -132,7 +137,8 @@ export const sectionHeader = (
       .weight("semibold")
       .color("tertiary"),
   ])
-    .paddingHorizontal(10)
+    .paddingLeading(7)
+    .paddingTrailing(10)
     .paddingTop(10)
     .paddingBottom(2)
     .frame({ maxWidth: "infinity" })

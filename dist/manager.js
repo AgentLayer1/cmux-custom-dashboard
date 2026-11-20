@@ -119,7 +119,7 @@ var badgesOf = (card) => [
   card.workspaceTitle && {
     key: "workspace",
     text: card.workspaceTitle,
-    icon: "circle.fill",
+    icon: "",
     fg: card.workspaceColor || "secondary",
     bg: card.workspaceColor ? `${card.workspaceColor}2e` : "#7f7f7f26",
     flexible: false
@@ -142,7 +142,9 @@ var badgesOf = (card) => [
   }
 ].filter((item) => typeof item === "object");
 var badge = (item) => HStack({ spacing: 3 }, [
-  Image(() => item().icon).font(8).color(() => item().fg),
+  ...item().icon ? [
+    Image(() => item().icon).font(8).color(() => item().fg)
+  ] : [],
   Text(() => item().text).font(10).weight("medium").color(() => item().fg).lineLimit(1).truncation("tail")
 ]).paddingHorizontal(6).paddingVertical(2).background(() => item().bg).cornerRadius(5).fixedSize(() => item().flexible ? null : "horizontal");
 var chip = (label, active, onTap) => Text(label).font(11).weight("semibold").paddingHorizontal(8).paddingVertical(3).cornerRadius(6).color(() => active() ? "primary" : "tertiary").background(() => active() ? "#7f7f7f3d" : null).hoverBackground("#7f7f7f3d").cursor("pointer").fixedSize("horizontal").onTap(onTap);
@@ -155,13 +157,13 @@ var searchField = (placeholder, onEdit) => HStack([
 var lookOf = (section) => typeof section === "string" ? SECTIONS[section] : section;
 var sectionHeader = (section, count, folded, onTap) => {
   const { label, color, icon } = lookOf(section);
-  return HStack({ spacing: 6 }, [
-    Image(icon).font(9).color(color),
+  return HStack({ spacing: 5 }, [
+    Image(icon).font(9).color(color).frame({ width: 12 }),
     Text(label).font(10).weight("bold").color(color),
     Text(() => String(count())).font(10).monospaced().color("tertiary"),
     Spacer(),
     Image(() => folded() ? "chevron.right" : "chevron.down").font(9).weight("semibold").color("tertiary")
-  ]).paddingHorizontal(10).paddingTop(10).paddingBottom(2).frame({ maxWidth: "infinity" }).cursor("pointer").onTap(onTap);
+  ]).paddingLeading(7).paddingTrailing(10).paddingTop(10).paddingBottom(2).frame({ maxWidth: "infinity" }).cursor("pointer").onTap(onTap);
 };
 var cardRow = (card) => VStack({ spacing: 4 }, [
   HStack({ spacing: 8, alignment: "top" }, [
@@ -197,18 +199,18 @@ var matches = (card, tokens) => {
 };
 var sectionCard = (card, color, expanded, onToggle) => VStack({ spacing: 4, alignment: "leading" }, [
   VStack({ spacing: 4, alignment: "leading" }, [
-    HStack({ spacing: 7 }, [
-      Circle({ size: 7 }).fill(color),
-      Text(() => card().title).font(13).weight("semibold").lineLimit(1).truncation("tail"),
+    HStack({ spacing: 8, alignment: "top" }, [
+      Circle({ size: 6 }).fill(color).paddingTop(5),
+      Text(() => card().title).font(13).weight("semibold").lineLimit(2).truncation("tail"),
       Spacer({ minLength: 4 }),
-      Text(() => card().span ?? "").font(10).monospaced().color("tertiary").fixedSize()
+      Text(() => card().span ?? "").font(10).monospaced().color("tertiary").fixedSize().paddingTop(2)
     ]),
     HStack({ spacing: 4 }, [
       ForEach({
         items: () => (card().badges ?? []).map(({ text, color: tint, icon }, index) => ({
           key: `${index}:${text}`,
           text,
-          icon: icon ?? "circle.fill",
+          icon: icon ?? "",
           fg: tint,
           bg: `${tint}26`,
           flexible: false

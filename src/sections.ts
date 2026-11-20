@@ -7,7 +7,7 @@ export interface CardBadge {
    */
   color: string;
   /**
-   * An SF Symbol before the text; a dot when absent.
+   * An SF Symbol before the text; none when absent, the tint alone carrying the colour.
    */
   icon?: string;
 }
@@ -88,19 +88,20 @@ const matches = (card: SectionCard, tokens: string[]) => {
 const sectionCard = (card: () => SectionCard, color: string, expanded: () => boolean, onToggle: () => void) =>
   VStack({ spacing: 4, alignment: "leading" }, [
     VStack({ spacing: 4, alignment: "leading" }, [
-      HStack({ spacing: 7 }, [
-        Circle({ size: 7 }).fill(color),
+      HStack({ spacing: 8, alignment: "top" }, [
+        Circle({ size: 6 }).fill(color).paddingTop(5),
         Text(() => card().title)
           .font(13)
           .weight("semibold")
-          .lineLimit(1)
+          .lineLimit(2)
           .truncation("tail"),
         Spacer({ minLength: 4 }),
         Text(() => card().span ?? "")
           .font(10)
           .monospaced()
           .color("tertiary")
-          .fixedSize(),
+          .fixedSize()
+          .paddingTop(2),
       ]),
       HStack({ spacing: 4 }, [
         ForEach(
@@ -109,7 +110,7 @@ const sectionCard = (card: () => SectionCard, color: string, expanded: () => boo
               (card().badges ?? []).map(({ text, color: tint, icon }, index) => ({
                 key: `${index}:${text}`,
                 text,
-                icon: icon ?? "circle.fill",
+                icon: icon ?? "",
                 fg: tint,
                 bg: `${tint}26`,
                 flexible: false,
